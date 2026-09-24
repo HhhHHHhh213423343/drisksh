@@ -26,7 +26,7 @@ from app.api.routes.company_profile import (
     export_company_profile,
     require_collection_key,
 )
-from app.models import Company
+from app.models import Company, RelatedEntity, RiskEvent
 from app.schemas.company import CompanySearchIngestRequest
 from app.schemas.company_profile import CompanyProfileComplete
 from app.services.company_profile import (
@@ -38,6 +38,7 @@ from app.services.company_profile import (
     profile_company_suggestion,
     resolve_profile_company_name,
 )
+from app.services.demo_scope import DemoScopeError, canonical_company_name
 from enterprise_sentinel.company_profile.collector import (
     _business_change_needs_review,
     sections_from_snapshot,
@@ -178,6 +179,66 @@ def test_incomplete_run_cannot_replace_snapshot() -> None:
         )
 
 
+def test_completed_snapshot_is_idempotently_converted_to_monitoring_evidence() -> None:
+    db = database()
+    company = Company(name="上海携程金融信息服务有限公司", company_profile={})
+    db.add(company)
+    db.commit()
+    db.refresh(company)
+
+    normalized = sample_normalized(company.name)
+    normalized["company_code"] = "C71376C50868F97142E2EDD20C553765"
+    normalized["modules"]["dynamic_monitor"]["sections"] = [
+        {
+            "title": "动态监测",
+            "columns": ["日期", "标题", "分类", "重要性", "正负面", "来源"],
+            "rows": [["2026-09-20", "新增诉讼事项", "司法风险", "重要", "负面", "法院公告"]],
+        }
+    ]
+    normalized["modules"]["investments"]["sections"] = [
+        {
+            "title": "对外投资企业",
+            "columns": ["企业名称", "投资比例", "企业状态", "行业"],
+            "rows": [["上海携程小额贷款有限公司", "100%", "存续", "金融"]],
+        }
+    ]
+
+    def complete_once(worker: str) -> None:
+        run = create_or_reuse_run(db, company, force=True)["run"]
+        assert claim_next_run(db, worker)
+        captured_at = datetime(2026, 9, 24, tzinfo=timezone.utc)
+        filename, excel_bytes = build_company_profile_workbook(company.name, normalized, captured_at)
+        complete_run(
+            db,
+            run["id"],
+            CompanyProfileComplete(
+                worker_id=worker,
+                captured_at=captured_at,
+                sop_version=SOP_VERSION,
+                company_code=normalized["company_code"],
+                module_statuses={key: "PASS" for key in PROFILE_MODULE_KEYS},
+                normalized_data=normalized,
+                raw_data={},
+                excel_filename=filename,
+                excel_sha256=hashlib.sha256(excel_bytes).hexdigest(),
+                excel_base64=base64.b64encode(excel_bytes).decode("ascii"),
+            ),
+        )
+
+    complete_once("mac-one")
+    first_event_count = db.query(RiskEvent).filter(RiskEvent.company_id == company.id).count()
+    first_related_count = db.query(RelatedEntity).filter(RelatedEntity.company_id == company.id).count()
+    assert first_event_count >= 1
+    assert first_related_count >= 1
+    event = db.query(RiskEvent).filter(RiskEvent.title == "新增诉讼事项").one()
+    assert event.category == "legal"
+    assert event.extra_payload["profile_snapshot_id"]
+
+    complete_once("mac-two")
+    assert db.query(RiskEvent).filter(RiskEvent.company_id == company.id).count() == first_event_count
+    assert db.query(RelatedEntity).filter(RelatedEntity.company_id == company.id).count() == first_related_count
+
+
 def test_expired_worker_lease_can_be_reclaimed() -> None:
     db = database()
     company = Company(name="上海携程金融信息服务有限公司", company_profile={})
@@ -212,6 +273,18 @@ def test_collection_worker_requires_shared_secret(monkeypatch) -> None:
     assert exc_info.value.status_code == 401
 
     assert require_collection_key("test-collection-secret") is None
+
+
+def test_demo_scope_allows_only_ctrip_finance(monkeypatch) -> None:
+    monkeypatch.setattr(
+        get_settings(),
+        "demo_company_name",
+        "上海携程金融信息服务有限公司",
+        raising=False,
+    )
+    assert canonical_company_name("携程金融信息服务有限公司") == "上海携程金融信息服务有限公司"
+    with pytest.raises(DemoScopeError):
+        canonical_company_name("其他企业有限公司")
 
 
 def test_excel_contract_contains_exact_eight_sheets() -> None:
@@ -387,6 +460,8 @@ def test_v32_business_changes_reject_systemically_empty_after_column() -> None:
 def test_target_company_is_queued_without_waiting_for_legacy_ingestion(monkeypatch) -> None:
     from app.api.routes import companies as companies_route
 
+    monkeypatch.setattr(companies_route.get_settings(), "company_profile_worker_enabled", True)
+
     async def unexpected_refresh(*args, **kwargs):
         raise AssertionError("目标企业不应等待原有公开源刷新")
 
@@ -416,6 +491,8 @@ def test_target_company_is_queued_without_waiting_for_legacy_ingestion(monkeypat
 
 def test_safe_company_alias_is_canonicalized_before_creation(monkeypatch) -> None:
     from app.api.routes import companies as companies_route
+
+    monkeypatch.setattr(companies_route.get_settings(), "company_profile_worker_enabled", True)
 
     async def unexpected_refresh(*args, **kwargs):
         raise AssertionError("安全别名应直接进入企业全景队列")
@@ -469,6 +546,8 @@ def test_company_alias_registry_is_deliberately_bounded() -> None:
 def test_existing_safe_alias_record_is_migrated_to_canonical_name(monkeypatch) -> None:
     from app.api.routes import companies as companies_route
 
+    monkeypatch.setattr(companies_route.get_settings(), "company_profile_worker_enabled", True)
+
     async def unexpected_refresh(*args, **kwargs):
         raise AssertionError("旧别名记录应直接迁移并进入队列")
 
@@ -493,6 +572,8 @@ def test_existing_safe_alias_record_is_migrated_to_canonical_name(monkeypatch) -
 
 def test_profile_target_does_not_fuzzy_match_a_different_company(monkeypatch) -> None:
     from app.api.routes import companies as companies_route
+
+    monkeypatch.setattr(companies_route.get_settings(), "company_profile_worker_enabled", True)
 
     async def unexpected_refresh(*args, **kwargs):
         raise AssertionError("目标企业应直接进入企业全景队列")

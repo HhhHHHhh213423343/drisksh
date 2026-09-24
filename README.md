@@ -158,6 +158,33 @@ python -m enterprise_sentinel.debug_probe \
 
 “上海携程金融信息服务有限公司”已启用按需企业全景采集：网站创建异步任务，Windows 采集 Worker 复用专用 Edge 登录态，八个模块完整通过后才更新快照和 Excel。已审批的企业别名会在入库前归一为法定全称，较短的“携程金融”只显示确认候选。部署、登录项与现场验收说明见 [docs/company-profile-agent.md](docs/company-profile-agent.md)。
 
+该旧采集链路现在由 `COMPANY_PROFILE_WORKER_ENABLED` 控制，默认关闭；代码和历史数据仍保留。新的首页“开始分析”使用下述投后监测任务，不依赖 Windows 登录态。
+
+## D.Risk 投后监测
+
+投后监测模块将“银联商务2026年股权投资风险监测项目”79条规则作为版本化规则集。每次点击开始分析都会创建新的 `analysis_run`，重新请求 A 股数据、公司官网、监管披露和权威公开来源；数据库只用于历史对比和留痕。
+
+主要能力：
+
+- 79条规则全量评估，严格区分 `hit`、`not_hit`、`insufficient_data` 和 `not_applicable`。
+- 上传 XLSX、XLS、CSV、PDF、DOCX、TXT、PNG、JPG；扫描文件使用中文 OCR。
+- 识别结果保留期间、单位、页码/单元格和置信度，低置信度字段需人工确认。
+- 关联企业先进入候选清单，确认后才在下一次实时分析中采集。
+- 手动生成月报草稿，支持网页审阅、审批、版本保留、Excel 下载和打印/PDF。
+- 大模型未配置时仍能生成确定性草稿；配置 OpenAI-compatible API 后，仅发送命中规则、证据摘录和必要指标，并缓存相同输入。
+
+正式部署需要 PostgreSQL、一个 backend Web 服务、一个执行 `python -m app.worker` 的 worker 服务，以及两个服务共享的 `/data/uploads` 持久化卷。生产环境必须设置 `AUTH_REQUIRED=true`、内部账号密码和随机 `SESSION_SECRET`。完整配置见 `.env.public.example`。
+
+如不希望在 Secret 中保存明文密码，可在 backend 环境执行 `python -m app.services.auth`，输入密码后将输出写入 `APP_PASSWORD_HASH`。
+
+本地未启用 `AUTH_REQUIRED` 时，登录页接受任意非空测试账号和密码；正式环境不得使用这一模式。
+
+本机预览使用项目根目录 `.env.local`。启用 DeepSeek 时只需填写 `DEEPSEEK_API_KEY` 并重启 `scripts/run-local.sh`；默认使用 `https://api.deepseek.com` 和低成本的 `deepseek-flash`，Key 留空时不会发起模型请求。
+
+`DEEPSEEK_API_KEY` 用于分析、归纳和报告写作，不等同于网页搜索。需要新闻与公开网页检索时另行填写 `SERPER_API_KEY`；A股财务和国家宏观指标通过 AkShare/官方来源采集，不依赖 Serper。
+
+接口、状态语义和运行链路见 [docs/post-investment-monitoring.md](docs/post-investment-monitoring.md)。
+
 ## D.Risk 每日公开数据接入
 
 第一版 Web 数据接入走“上市公司优先、每日批处理、合规稳定优先”的路线，不绕过验证码、不模拟登录，也不硬爬强反爬商业站点。

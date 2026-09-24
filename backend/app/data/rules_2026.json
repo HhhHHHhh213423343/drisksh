@@ -1,0 +1,1113 @@
+{
+  "name": "银联商务2026年股权投资风险监测规则",
+  "version": "2026.1",
+  "source_name": "银联商务2026年股权投资风险监测项目-监测范围及评估标准.xlsx",
+  "rules": [
+    {
+      "code": 1,
+      "category": "外部风险",
+      "monitoring_point": "因货币政策、财政政策、税收政策等经济政策发生变化，造成或可能造成重大不利影响。",
+      "assessment_standard": "评估政策变化对企业盈利水平和资本充足性的预期影响。若预计导致净利润下滑≥10%，或对资本充足率/杠杆水平产生实质性冲击，视为重大风险；关注政策过渡期安排及企业调整空间。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 2,
+      "category": "外部风险",
+      "monitoring_point": "因产业政策、行业监管政策发生变化， 造成或可能造成重大不利影响。",
+      "assessment_standard": "评估监管政策变化对业务合规性及经营持续性的影响。若核心业务被列入限制类或需重大整改，或合规成本显著上升导致盈利模式受冲击，视为重大风险；关注监管政策落地节奏及整改难度。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 3,
+      "category": "外部风险",
+      "monitoring_point": "因技术更新，市场需求、竞争格局发生变化，造成或可能造成重大不利影响。",
+      "assessment_standard": "评估市场竞争格局变化对企业市场地位和盈利能力的影响。若核心业务市场份额明显下滑，或行业整体收益率持续收窄导致盈利空间被压缩，视为高风险；关注企业差异化竞争能力及转型进展。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 4,
+      "category": "外部风险",
+      "monitoring_point": "因主要上下游企业或供应链（交易对手方）发生重大变化，造成或可能造成重大不利影响。",
+      "assessment_standard": "评估主要交易对手方、合作渠道发生重大变化对业务连续性的影响。若核心合作方终止合作或出现信用风险，导致业务规模大幅收缩或资产质量恶化，视为重大风险；关注替代渠道储备及风险缓释措施。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 5,
+      "category": "外部风险",
+      "monitoring_point": "因外部竞争、供求变化等因素影响，被投企业产品价格被动大幅下降。",
+      "assessment_standard": "评估产品收益率/定价被动收窄对盈利的影响。若主力产品收益率持续下行且无法通过成本端对冲，导致净息差/毛利率明显压缩，视为高风险；关注价格战持续预期及企业成本管控能力。",
+      "requirement_type": "自选",
+      "evaluation_type": "hybrid",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 6,
+      "category": "外部风险",
+      "monitoring_point": "境外被投企业所在国政治、经济、社会环境等发生变化，造成或可能造成重大不利影响。（中金同盛非境外）",
+      "assessment_standard": "评估境外经营环境变化对资产安全及投资回报的影响。若所在国主权风险显著上升，或存在外汇管制、资产冻结等风险，导致境外资产减值预期≥20%，视为重大风险；关注资产保全及退出可行性。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 7,
+      "category": "外部风险",
+      "monitoring_point": "被投企业因自然灾害等不可抗力遭受或可能遭受重大人员或财产损失。",
+      "assessment_standard": "评估不可抗力事件对业务连续性和资产安全的影响。若核心业务系统中断≥7天，或直接财产损失占净资产≥5%，视为重大风险；关注业务连续性预案及保险覆盖情况。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 8,
+      "category": "业务及经营风险",
+      "monitoring_point": "采购的生产资料种类、数量与业务类型、生产规模不符。",
+      "assessment_standard": "评估业务资源投入与业务规模、发展阶段的匹配性。若人力、系统、资金等资源投入与业务产出明显失衡，投入产出比持续恶化，视为资源配置低效；关注成本管控及资源优化措施。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 9,
+      "category": "业务及经营风险",
+      "monitoring_point": "供应商或客户（交易对手方）集中度过高，存在对单一企业高度依赖情形。",
+      "assessment_standard": "评估交易对手方集中度。若前五大交易对手方业务占比合计≥50%，或单一最大对手方占比≥30%，视为集中度过高；关注对手方信用质量及分散化进展。",
+      "requirement_type": "自选",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 10,
+      "category": "业务及经营风险",
+      "monitoring_point": "与同一客户（交易对手方）同时发生销售和采购交易，或者与受同一方控制的客户和供应商同时发生交易。",
+      "assessment_standard": "评估与同一交易对手方双向交易的规模及公允性。若双向交易金额较大且净额结算占比高，需核查交易实质及定价公允性；关注是否存在调节收入或资金空转风险。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 11,
+      "category": "业务及经营风险",
+      "monitoring_point": "大额采购、投融资、资产处置、资本运作等出现重大风险。",
+      "assessment_standard": "评估大额投融资、资产处置等重大资本运作的风险。若单笔金额占净资产≥10%且出现减值迹象，或已确认损失占净资产≥5%，视为重大风险；关注决策程序合规性及止损机制有效性。",
+      "requirement_type": "自选",
+      "evaluation_type": "hybrid",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 12,
+      "category": "业务及经营风险",
+      "monitoring_point": "核心业务变更， 或主要产品、服务发生变化，导致所处行业发生变化。",
+      "assessment_standard": "评估业务转型的方向、进展及风险。若新业务收入占比快速提升且原核心业务萎缩，需关注转型战略清晰度、管理层能力匹配度及新业务盈利模式验证情况。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 13,
+      "category": "业务及经营风险",
+      "monitoring_point": "主营业务停滞，市场份额快速下降或主要经营性资产丧失，业务的可持续性基础改变。",
+      "assessment_standard": "评估主营业务萎缩程度及可持续性。若核心业务收入同比下降≥30%，或核心业务线停摆且无替代业务支撑，视为业务可持续性存疑；关注转型可行性及资产处置价值。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 14,
+      "category": "业务及经营风险",
+      "monitoring_point": "被投企业生产资料、生产设施，或业务运营平台、系统等管理不规范，存在严重影响业务正常开展的情形。",
+      "assessment_standard": "评估业务系统、IT基础设施及运营平台的稳定性和规范性。若核心业务系统频繁故障且影响业务开展，或系统安全存在重大漏洞导致数据/资金风险，视为高风险；关注IT治理及安全投入。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 15,
+      "category": "业务及经营风险",
+      "monitoring_point": "重要业务合作、产品开发、系统建设、品牌推广等业务举措严重不及预期。",
+      "assessment_standard": "评估重大业务举措的进展偏差及影响。若核心项目进度严重滞后或产出显著低于预期，且已投入资源较大难以收回，视为重大偏差；关注项目止损机制及后续资源配置调整。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 16,
+      "category": "业务及经营风险",
+      "monitoring_point": "现金规模明显超过业务周转所需资金。",
+      "assessment_standard": "评估资金使用效率。若货币资金占总资产≥40%且无明确业务用途，资金收益率显著低于市场水平，视为资金使用低效；关注大额资金流向、理财合规性及资金归集管理。",
+      "requirement_type": "自选",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 17,
+      "category": "业务及经营风险",
+      "monitoring_point": "期间费用增长不符合业务发展情况。",
+      "assessment_standard": "评估费用增长与业务增长的匹配性。若期间费用增速高出营收增速≥20个百分点，且费用率持续上升，视为费用管控失效；关注费用列支真实性及降本措施。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 18,
+      "category": "业务及经营风险",
+      "monitoring_point": "销售情况与所处行业情况不符。",
+      "assessment_standard": "评估业务增长情况与行业趋势的一致性。若业务规模或营收增速与行业整体趋势显著背离（大幅高于或低于），需核查业务真实性、数据口径差异及竞争地位变化。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 19,
+      "category": "业务及经营风险",
+      "monitoring_point": "销售渠道发生变化， 重点业务难以推进。",
+      "assessment_standard": "评估获客渠道、业务合作渠道的变化及影响。若核心渠道合作终止或政策收紧，导致新业务投放量大幅下降，且新渠道拓展进度不及预期，视为渠道风险；关注渠道集中度及多元化进展。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 20,
+      "category": "业务及经营风险",
+      "monitoring_point": "客户类型、主要客户（交易对手方）发生重大变动，客户数量显著下降。",
+      "assessment_standard": "评估客户结构变动及客户基础稳定性。若前十大交易对手方变动比例过高，或活跃客户数量显著下降，视为客户基础恶化；关注流失原因及获客能力变化。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 21,
+      "category": "业务及经营风险",
+      "monitoring_point": "与关联方或疑似关联方客户发生大量或大额交易，关联方交易显失公平。",
+      "assessment_standard": "评估关联交易的规模及公允性。若关联交易金额占营收≥10%，且交易定价与市场价格存在明显偏差，视为显失公平；关注关联方识别完整性及交易决策程序合规性。",
+      "requirement_type": "自选",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 22,
+      "category": "业务及经营风险",
+      "monitoring_point": "现金交易比例较高， 并且与所在行业的常用结算模式不同。",
+      "assessment_standard": "评估资金结算方式与行业惯例的一致性。若存在大量异常现金交易或非正规渠道结算，与行业常用模式显著不同，视为高风险；关注资金轨迹可追溯性及合规风险。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 23,
+      "category": "业务及经营风险",
+      "monitoring_point": "已记录的收入交易未真实发生，虚构交易，不能提供相关合同、订单等材料。",
+      "assessment_standard": "评估收入交易的真实性。若存在无法提供合同、凭证或资金流水支撑的收入，且金额较大，视为收入真实性存疑；关注大额异常交易的对手方背景及资金流向。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 24,
+      "category": "业务及经营风险",
+      "monitoring_point": "高估履约进度虚增收入。",
+      "assessment_standard": "评估收入确认的谨慎性。若项目进度确认比例与实际投入/产出明显不符，存在提前确认收入迹象，视为收入确认激进；关注会计政策一致性及审计调整情况。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 25,
+      "category": "业务及经营风险",
+      "monitoring_point": "隐瞒退货条款，在不满足确认收入情况下全额记录销售收入。",
+      "assessment_standard": "评估收入确认条件的满足情况。若存在隐瞒风险缓释条款、在不满足收入确认条件时全额确认收益的情形，视为收入确认不合规；关注相关条款披露完整性及会计处理合规性。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 26,
+      "category": "业务及经营风险",
+      "monitoring_point": "通过对外投资、预付账款、采购长期资产等形式虚构收入。",
+      "assessment_standard": "评估异常资金往来与收入的关联性。若大额对外投资、预付款项与收入增长存在异常对应关系，且缺乏合理商业实质，视为高风险；关注资金最终流向及交易真实性。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 27,
+      "category": "业务及经营风险",
+      "monitoring_point": "对应收款项/合同资产账龄长、回款率低或缺乏还款能力的客户， 仍放宽信用政策。",
+      "assessment_standard": "评估授信政策的审慎性。若对已出现逾期或信用恶化的客户仍新增授信或展期，且新增金额占该客户已逾期金额比例较高，视为授信政策异常；关注客户资信评估机制及审批流程。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 28,
+      "category": "业务及经营风险",
+      "monitoring_point": "估值同比下降幅度超过10%。",
+      "assessment_standard": "评估估值变动幅度及对投资账面价值的影响。若最新估值较上一轮下降≥10%，需评估减值计提必要性；关注估值方法变更、业绩对赌完成情况及估值下调原因。",
+      "requirement_type": "自选",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 29,
+      "category": "业务及经营风险",
+      "monitoring_point": "存在股东及其关联方占用或转移公司资金、资产及其他资源的情况。",
+      "assessment_standard": "评估股东及关联方资金占用情况。若占用资金余额占净资产≥5%，且占用时间超过3个月未归还，视为重大违规；关注占用性质、归还计划及保障措施。",
+      "requirement_type": "自选",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 30,
+      "category": "财务风险",
+      "monitoring_point": "收入金额及业务指标大幅增长， 现金流入、流出显著增加，与业务规模不符。",
+      "assessment_standard": "评估收入增长与现金流、业务规模的匹配性。若收入大幅增长但经营性现金流未同步增长，或资金周转异常加速且缺乏合理解释，视为收入质量存疑；关注业务真实性及资金循环迹象。",
+      "requirement_type": "强制",
+      "evaluation_type": "hybrid",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 31,
+      "category": "财务风险",
+      "monitoring_point": "主要财务指标与市场可比公司/行业平均值偏离较大。",
+      "assessment_standard": "评估核心财务指标与行业可比公司的偏离度。若收益率、不良率、杠杆水平等关键指标显著偏离行业均值且无合理解释，需核查业务模式差异及数据真实性。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 32,
+      "category": "财务风险",
+      "monitoring_point": "主营业务收入同比下降10%以上，或未完成预算，或连续出现负面异常变动趋势。",
+      "assessment_standard": "评估营收下滑幅度及趋势。若主营业务收入同比下降≥10%，或连续两个季度环比下滑，视为负面趋势确立；关注预算完成率及下滑原因可逆性。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 33,
+      "category": "财务风险",
+      "monitoring_point": "净利润同比下降10%以上或亏损，或未完成预算，或连续出现负面异常变动趋势。",
+      "assessment_standard": "评估盈利恶化程度。若净利润同比下降≥10%，或扣非净利润连续两个季度为负，视为盈利恶化；关注亏损额占净资产比例及扭亏路径。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 34,
+      "category": "财务风险",
+      "monitoring_point": "主要业务指标未实现， 或同比下降超过10%以上。",
+      "assessment_standard": "评估核心业务指标完成情况。若贷款余额、在保余额、客户数等关键业务指标同比下降≥10%，或完成率低于预算80%，视为业务承压；关注指标下滑驱动因素。",
+      "requirement_type": "自选",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 35,
+      "category": "财务风险",
+      "monitoring_point": "期末净资产为负数，或同比显著下滑， 或连续出现负面异常变动趋势。",
+      "assessment_standard": "评估净资产变动及资本充足性。若净资产同比下滑≥20%，或接近监管资本要求下限，视为资本侵蚀风险；关注未弥补亏损规模及资本补充计划。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 36,
+      "category": "财务风险",
+      "monitoring_point": "资产收益率、净资产收益率逐年同比显著下降或连续出现负面异常变动趋势。",
+      "assessment_standard": "评估盈利能力变动趋势。若ROE连续两年同比下降≥5个百分点，且低于行业平均水平，视为盈利能力持续恶化；关注杠杆水平及资产运营效率变化。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 37,
+      "category": "财务风险",
+      "monitoring_point": "资产负债率同比显著上升，或流动比率、速动比率等同比显著下降，或连续出现负面异常变动趋势。",
+      "assessment_standard": "评估杠杆水平及流动性状况。若杠杆水平同比显著上升，或流动性指标持续恶化接近监管预警线，视为偿债及流动性风险上升；关注融资结构及短期债务到期分布。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 38,
+      "category": "财务风险",
+      "monitoring_point": "应收款项(包括应收账款、其他应收款等) 余额同比增加显著。",
+      "assessment_standard": "评估应收类款项增长与业务增长的匹配性。若应收类款项增速明显高于业务增速，且账龄结构拉长，视为资产质量下行信号；关注新增应收款的对手方信用及回收预期。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 39,
+      "category": "财务风险",
+      "monitoring_point": "应收款项长账龄余额显著增加， 回款困难， 坏账准备余额显著上升。",
+      "assessment_standard": "评估资产质量恶化程度。若逾期90天以上资产占比同比上升≥2个百分点，或不良率持续攀升，视为资产质量显著恶化；关注前十大不良项目及处置进展。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 40,
+      "category": "财务风险",
+      "monitoring_point": "账龄过长、已出现回款风险等的应收款项未计提环账，应收账款坏账准备/合同资产减值准备的计提不足。",
+      "assessment_standard": "评估减值准备计提的充分性。若拨备覆盖率低于行业平均或监管要求，或对明确不良的资产未足额计提减值，视为计提不足；关注减值政策一致性及计提比例合理性。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 41,
+      "category": "财务风险",
+      "monitoring_point": "在没有实质需求情况下发生大额借款或借款利息较市场同期利率显著偏高。",
+      "assessment_standard": "评估融资的必要性及成本合理性。若新增大额融资但无明确业务用途，或融资利率显著高于市场同期水平，视为异常融资；关注资金实际流向及关联交易风险。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 42,
+      "category": "财务风险",
+      "monitoring_point": "存在大量货币资金的情况下仍高额或高息举债。",
+      "assessment_standard": "评估资金与负债的匹配性。若货币资金充裕但仍持续高息举债，且利息支出远高于资金收益，视为存贷双高；关注货币资金受限比例及真实可动用规模。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 43,
+      "category": "财务风险",
+      "monitoring_point": "经营活动现金净流量、现金净流量同比下降10%以上或为负数：或虽为正数，但资金紧张，存在现金流断裂风险； 或连续出现负面异常变动趋势。",
+      "assessment_standard": "评估现金流状况及资金链安全。若经营性现金流持续为负，或可动用资金不足以覆盖3个月到期债务，视为资金链紧张；关注融资渠道畅通性及应急资金安排。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 44,
+      "category": "财务风险",
+      "monitoring_point": "存在与财务相关的对外担保事项(含资产被抵押、质押等情形).",
+      "assessment_standard": "评估对外担保规模及风险。若担保余额占净资产≥20%，或被担保方已出现违约，视为担保风险较高；关注反担保措施有效性及代偿可能性。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 45,
+      "category": "财务风险",
+      "monitoring_point": "严重资不抵债，存在破产清算风险。",
+      "assessment_standard": "评估持续经营能力。若净资产为负且经营性现金流持续为负，视为持续经营存在重大不确定性；关注债务重组进展及股东增资意愿。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 46,
+      "category": "财务风险",
+      "monitoring_point": "发生重大会计政策、会计估计变更以及重大会计差错。",
+      "assessment_standard": "评估会计变更的影响及合理性。若变更对净利润影响≥10%，且变更理由缺乏充分依据，视为会计处理存疑；关注审计机构意见及监管态度。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 47,
+      "category": "财务风险",
+      "monitoring_point": "财务报表未被审计机构出具标准无保留意见的审计报告。",
+      "assessment_standard": "评估审计意见类型及影响。若出具保留意见、无法表示意见或否定意见，视为财务报告可信度严重受损；关注非标事项解决进展及对融资、监管的影响。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 48,
+      "category": "财务风险",
+      "monitoring_point": "会计核算体系、财务管理机制等内部控制存在重大缺陷。",
+      "assessment_standard": "评估财务内控的有效性。若存在资金管控、收入确认、减值计提等关键环节的内控重大缺陷，且导致财务数据失真，视为高风险；关注整改进度及有效性。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 49,
+      "category": "公司治理风险",
+      "monitoring_point": "重大组织机构调整、重大人事变动等。",
+      "assessment_standard": "评估组织及人事变动对经营稳定性的影响。若核心管理团队年度变动比例过高，或关键业务部门负责人集中更换，视为治理不稳定；关注变动原因及继任者资质。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 50,
+      "category": "公司治理风险",
+      "monitoring_point": "董事长、总经理、财务负责人等关键岗位人员长期缺位。",
+      "assessment_standard": "评估关键岗位缺位情况。若董事长或总经理缺位≥3个月，或财务负责人长期空缺且无合格代行人员，视为治理结构缺陷；关注招聘进展及过渡期安排。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 51,
+      "category": "公司治理风险",
+      "monitoring_point": "董事、监事、高级管理人员频繁变动、非正常离职、失联，或因其他原因无法正常履职。",
+      "assessment_standard": "评估董监高稳定性。若年度内董监高离职率≥40%，或出现失联、被调查等非正常离职，视为治理风险；关注核心团队稳定性及业务连续性影响。",
+      "requirement_type": "自选",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 52,
+      "category": "公司治理风险",
+      "monitoring_point": "核心人员流失， 或10%以上的员工离职、被裁员。",
+      "assessment_standard": "评估人才流失情况。若核心风控、业务骨干流失占核心团队≥20%，或整体员工离职率≥15%，视为人才流失风险；关注薪酬竞争力及团队稳定性。",
+      "requirement_type": "自选",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 53,
+      "category": "公司治理风险",
+      "monitoring_point": "内部管理出现重大问题，处于停产、半停产状态， 影响企业持续经营。",
+      "assessment_standard": "评估内部管理问题的严重程度。若核心业务因管理混乱处于非正常经营状态，或大面积业务停摆，视为持续经营存疑；关注问题根源及恢复计划可行性。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 54,
+      "category": "公司治理风险",
+      "monitoring_point": "因内部管理混乱影响公司日常经营的其他紧急、异动、重大事件。",
+      "assessment_standard": "评估内部异动事件的影响范围及持续时间。若事件导致核心业务中断或引发监管介入、群体性事件，视为重大异动；关注管理层应对能力及事件解决进度。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": false,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 55,
+      "category": "公司治理风险",
+      "monitoring_point": "发生重大生产安全、信息或数据泄露事件。",
+      "assessment_standard": "评估信息安全及数据事件的严重程度。若发生重大数据泄露、系统被攻击导致客户信息或资金受损，视为重大风险；关注监管处罚预期及品牌声誉影响。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 56,
+      "category": "公司治理风险",
+      "monitoring_point": "被投企业控股股东、实际控制人与经营管理层之间长期无法有效沟通或存在重大分歧。",
+      "assessment_standard": "评估股东与管理层的治理协同性。若在战略方向、重大投资、风控政策等关键事项上分歧持续存在且无法达成一致，视为治理僵局；关注分歧对决策效率的影响。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 57,
+      "category": "公司治理风险",
+      "monitoring_point": "实际控制人变更或股权结构发生重大变更。",
+      "assessment_standard": "评估股权结构及控制权稳定性。若第一大股东持股比例变动≥10个百分点，或实际控制人发生变更，视为控制权重大变化；关注新股东背景、战略意图及对经营层的影响。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 58,
+      "category": "公司治理风险",
+      "monitoring_point": "公司治理混乱，股东会、董事会、监事会、办公会不能正常召开或者正常运作，决议效力存在争议或被法院依法撤销或宣告无效。",
+      "assessment_standard": "评估公司治理机制的有效性。若三会运作不规范、决议存在效力争议或被司法撤销，视为治理失效；关注议事规则完善及争议解决进展。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 59,
+      "category": "公司治理风险",
+      "monitoring_point": "投后管理工作持续受阻， 无法正常行使股东权利。",
+      "assessment_standard": "评估股东权利行使的顺畅性。若持续无法正常获取经营财务信息，或重大决策被排除参与，视为股东权利受损；关注沟通机制及法律救济途径。",
+      "requirement_type": "强制",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 60,
+      "category": "公司治理风险",
+      "monitoring_point": "被投企业未按规定提供信息，或者提供不真实、不完整的信息，不接受外部审计，可能导致严重后果。",
+      "assessment_standard": "评估信息披露的合规性。若拒绝提供关键信息，或提供虚假信息且涉及金额重大，视为严重违规；关注信息真实性核查及投资估值调整需求。",
+      "requirement_type": "强制",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 61,
+      "category": "公司治理风险",
+      "monitoring_point": "存在投资时对银联方的承诺事项未实现或实现无望的情况。",
+      "assessment_standard": "评估投资承诺的完成情况。若业绩、合规、业务协同等核心承诺完成率低且无改善路径，视为承诺违约；关注对赌/补偿条款触发条件及追偿可行性。",
+      "requirement_type": "强制",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 62,
+      "category": "公司治理风险",
+      "monitoring_point": "其他股东持有的被投企业股权被质押。",
+      "assessment_standard": "评估股权质押风险。若其他股东质押股权占其持股≥50%，且估值已接近预警线，视为质押风险；关注质押融资用途及补充担保能力。",
+      "requirement_type": "自选",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 63,
+      "category": "公司治理风险",
+      "monitoring_point": "被投企业触发投资协议约定的现金补偿、股权补偿、股权回购等权利保护条款，主张权利过程中遇到严重障碍。",
+      "assessment_standard": "评估权利保护条款的执行情况。若触发回购/补偿条款但对方拒绝履行，且协商无果，视为权利保护受阻；关注诉讼成本、执行难度及预计回收比例。",
+      "requirement_type": "强制",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 64,
+      "category": "公司治理风险",
+      "monitoring_point": "被投企业受到约谈、通报批评、公开谴责。",
+      "assessment_standard": "评估监管处罚的性质及影响。若受到监管部门公开谴责或行政处罚，且涉及核心业务合规问题，视为声誉及合规风险；关注整改要求及后续监管力度。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 65,
+      "category": "内控风险",
+      "monitoring_point": "未严格按照内控管理的原则和要求实现业务、财务、营销、采购、合同、系统等重要环节的不相容岗位分离及关键岗位人员的监督、制约。",
+      "assessment_standard": "评估关键岗位分离及制衡机制的有效性。若资金审批、授信审批、合同签署等核心环节存在不相容岗位兼任且无监督制衡，视为内控重大缺陷；关注舞弊风险及岗位轮换机制。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 66,
+      "category": "内控风险",
+      "monitoring_point": "未建立重大内控风险及突发事件应急处理机制，对可能发生的重大内控风险及突发事件，未制定应急预案、明确责任人员、规范处置程序。",
+      "assessment_standard": "评估应急管理体系的完备性。若对流动性风险、信息安全、重大合规事件等缺乏应急预案，且从未开展应急演练，视为应急能力不足；关注制度建设进度。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 67,
+      "category": "内控风险",
+      "monitoring_point": "未在重大内控风险及突发事件发生后及时、准确、完整上报信息。",
+      "assessment_standard": "评估重大事件上报机制的有效性。若重大事件发生后未及时上报，或存在隐瞒、谎报关键信息的情形，视为上报机制失效；关注信息传递链条及问责机制。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 68,
+      "category": "内控风险",
+      "monitoring_point": "未严格落实重大内控风险及突发事件的处置和整改要求。",
+      "assessment_standard": "评估内控缺陷整改的执行力度。若重大内控缺陷整改完成率低，或屡查屡犯问题突出，视为整改不力；关注管理层整改意愿及问责机制。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 69,
+      "category": "内控风险",
+      "monitoring_point": "将资金存放于管理层或员工个人账户，或通过个人账户进行交易资金结算。",
+      "assessment_standard": "评估资金管理的合规性。若存在通过个人账户进行业务资金结算的情形，视为重大内控缺陷及合规风险；关注资金性质、规模及税务合规性。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 70,
+      "category": "法律风险",
+      "monitoring_point": "控股股东持有的被投企业股权被司法冻结、强制执行。",
+      "assessment_standard": "评估股权冻结对控制权的影响。若控股股东被冻结股权占其持股≥30%，且可能导致控制权变更，视为重大法律风险；关注冻结原因、案件进展及股权处置预期。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 71,
+      "category": "法律风险",
+      "monitoring_point": "被投企业或其控股股东、实际控制人、法定代表人、董事长、总经理受到行业主管部门的行政处罚，对被投企业产生重大不利影响。",
+      "assessment_standard": "评估行政处罚的严重程度。若单次处罚金额占净利润≥10%，或导致业务暂停、资质降级/吊销，视为重大处罚；关注处罚性质、整改要求及对后续经营的限制。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 72,
+      "category": "法律风险",
+      "monitoring_point": "被投企业或其控股股东、实际控制人、法定代表人、董事长、总经理被司法调查，对被投企业产生重大不利影响。",
+      "assessment_standard": "评估司法调查的影响。若实际控制人、董事长或总经理被立案调查，且涉及核心业务或重大合规问题，视为重大风险；关注调查进展及对经营决策的影响。",
+      "requirement_type": "自选",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 73,
+      "category": "法律风险",
+      "monitoring_point": "被投企业或其控股股东、实际控制人、法定代表人、董事长、总经理发生重大诉讼仲裁案件，对被投企业产生重大不利影响。",
+      "assessment_standard": "评估重大诉讼的影响。若单案涉案金额占净资产≥10%，或涉及核心资产、业务资质争议，视为重大诉讼；关注胜诉概率、预计损失及对经营的持续性影响。",
+      "requirement_type": "强制",
+      "evaluation_type": "quantitative",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 74,
+      "category": "法律风险",
+      "monitoring_point": "被投企业或其控股股东、实际控制人、法定代表人、董事长、总经理被列为失信被执行人、列入经营异常名录。",
+      "assessment_standard": "评估信用受损程度。若被列为失信被执行人，或列入经营异常名录长期未移出，视为信用严重受损；关注失信原因、对融资合作的影响及修复计划。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 75,
+      "category": "法律风险",
+      "monitoring_point": "存在与法律相关的对外担保事项(如承担连带保证责任).",
+      "assessment_standard": "评估对外担保的法律风险。若担保余额占净资产≥20%，且被担保方信用状况恶化，视为代偿风险高；关注担保合同条款、反担保措施及预计负债计提情况。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": false,
+        "重庆中金同盛小额贷款有限公司": false
+      }
+    },
+    {
+      "code": 76,
+      "category": "品牌舆情风险",
+      "monitoring_point": "被投企业或其控股股东、实际控制人、法定代表人、高级管理人员、重要关联方发生重大舆情事件，或其他可能对银联声誉及品牌造成较大负面影响的事件。",
+      "assessment_standard": "评估舆情事件的传播范围及对银联品牌的关联影响。若事件登上主流媒体且负面声量高，或涉及金融消费者权益、监管违规等敏感话题，可能对银联品牌产生连带负面影响，视为重大舆情风险。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 77,
+      "category": "品牌舆情风险",
+      "monitoring_point": "存在将银联机构名称、专用简称、商标标志等用于不具有实际控制权、不纳入并表管理的机构，出借名号和挂名经营等情形。",
+      "assessment_standard": "评估品牌授权合规性。若存在未经授权使用银联品牌或超范围授权的情形，且涉及金融类业务，视为品牌授权失控；关注清理整改进度及责任界定。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 78,
+      "category": "品牌舆情风险",
+      "monitoring_point": "被投企业未经授权使用银联品牌；或未按照《中国银联品牌使用授权管理办法》规定的授权条件和授权范围使用银联品牌。",
+      "assessment_standard": "评估品牌使用的合规性。若存在未授权使用或超授权范围使用银联品牌的情形，视为品牌违规；关注授权协议执行及整改情况。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    },
+    {
+      "code": 79,
+      "category": "其他风险",
+      "monitoring_point": "结合被投企业实际情况和所在行业特殊性， 需监测的其他风险。",
+      "assessment_standard": "根据被投企业所处行业特性及业务模式，定制化补充监测标准。原则上，若该类风险可能对企业价值造成实质性负面影响，或可能引发连锁风险传导，纳入重点监测；明确触发条件、监测频率及应对预案。",
+      "requirement_type": "自选",
+      "evaluation_type": "manual",
+      "enabled": true,
+      "original_targets": {
+        "分海控股有限公司": true,
+        "中金同盛商业保理有限公司": true,
+        "重庆中金同盛小额贷款有限公司": true
+      }
+    }
+  ]
+}

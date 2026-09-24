@@ -21,23 +21,80 @@ services:
       FASTGPT_DATASET_ID: ${FASTGPT_DATASET_ID}
       FASTGPT_DATASET_UPSERT_PATH: ${FASTGPT_DATASET_UPSERT_PATH}
       FASTGPT_CHAT_PATH: ${FASTGPT_CHAT_PATH}
+      LLM_BASE_URL: ${LLM_BASE_URL}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL: ${LLM_MODEL}
+      LLM_CHAT_PATH: ${LLM_CHAT_PATH:-/chat/completions}
+      SERPER_API_KEY: ${SERPER_API_KEY}
+      AUTH_REQUIRED: ${AUTH_REQUIRED:-true}
+      APP_USERNAME: ${APP_USERNAME:-admin}
+      APP_PASSWORD: ${APP_PASSWORD}
+      APP_PASSWORD_HASH: ${APP_PASSWORD_HASH}
+      SESSION_SECRET: ${SESSION_SECRET}
+      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-12}
+      UPLOAD_ROOT: /data/uploads
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-52428800}
+      MAX_DOCUMENT_PAGES: ${MAX_DOCUMENT_PAGES:-200}
+      INLINE_JOB_EXECUTION: "false"
+      COMPANY_PROFILE_WORKER_ENABLED: ${COMPANY_PROFILE_WORKER_ENABLED:-true}
+      DEMO_COMPANY_NAME: ${DEMO_COMPANY_NAME:-上海携程金融信息服务有限公司}
+      DEMO_REPORT_AS_OF_DATE: ${DEMO_REPORT_AS_OF_DATE:-2026-09-24}
+      QICHACHA_ENABLED: ${QICHACHA_ENABLED:-true}
+      QICHACHA_APP_KEY: ${QICHACHA_APP_KEY}
+      QICHACHA_SECRET_KEY: ${QICHACHA_SECRET_KEY}
       COLLECTION_API_KEY: ${COLLECTION_API_KEY}
     depends_on:
       - db
     expose:
       - "8001"
+    volumes:
+      - uploads_data:/data/uploads
+
+  worker:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command: ["python", "-m", "app.worker"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      FASTGPT_BASE_URL: ${FASTGPT_BASE_URL}
+      FASTGPT_API_KEY: ${FASTGPT_API_KEY}
+      FASTGPT_CHAT_PATH: ${FASTGPT_CHAT_PATH}
+      LLM_BASE_URL: ${LLM_BASE_URL}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL: ${LLM_MODEL}
+      LLM_CHAT_PATH: ${LLM_CHAT_PATH:-/chat/completions}
+      SERPER_API_KEY: ${SERPER_API_KEY}
+      UPLOAD_ROOT: /data/uploads
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-52428800}
+      MAX_DOCUMENT_PAGES: ${MAX_DOCUMENT_PAGES:-200}
+      COMPANY_PROFILE_WORKER_ENABLED: ${COMPANY_PROFILE_WORKER_ENABLED:-true}
+      DEMO_COMPANY_NAME: ${DEMO_COMPANY_NAME:-上海携程金融信息服务有限公司}
+      DEMO_REPORT_AS_OF_DATE: ${DEMO_REPORT_AS_OF_DATE:-2026-09-24}
+      QICHACHA_ENABLED: ${QICHACHA_ENABLED:-true}
+      QICHACHA_APP_KEY: ${QICHACHA_APP_KEY}
+      QICHACHA_SECRET_KEY: ${QICHACHA_SECRET_KEY}
+      COLLECTION_API_KEY: ${COLLECTION_API_KEY}
+    depends_on:
+      - db
+    volumes:
+      - uploads_data:/data/uploads
 
   frontend:
     build:
       context: ./frontend
       args:
         BACKEND_URL: http://backend:8001
+        NEXT_PUBLIC_COMPANY_PROFILE_WORKER_ENABLED: "false"
     restart: unless-stopped
     environment:
       NODE_ENV: production
       PORT: 3000
       HOSTNAME: 0.0.0.0
       BACKEND_URL: http://backend:8001
+      NEXT_PUBLIC_COMPANY_PROFILE_WORKER_ENABLED: "false"
       CSRC_MONITOR_ROOT: /data/csrc-monitor
     volumes:
       - "${CSRC_MONITOR_ROOT_HOST:-./data/csrc-monitor}:/data/csrc-monitor:ro"
@@ -65,3 +122,4 @@ volumes:
   postgres_data:
   caddy_data:
   caddy_config:
+  uploads_data:

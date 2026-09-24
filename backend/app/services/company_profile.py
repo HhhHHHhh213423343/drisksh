@@ -12,6 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import Company, CompanyProfileRun, CompanyProfileSnapshot
+from app.services.company_profile_evidence import ingest_company_profile_snapshot
 
 
 PROFILE_COMPANY_NAME = "上海携程金融信息服务有限公司"
@@ -400,6 +401,7 @@ def complete_run(db: Session, run_id: UUID, payload: Any) -> dict[str, Any]:
     if not payload.excel_filename.lower().endswith(".xlsx"):
         raise ValueError("正式交付文件必须是 .xlsx。")
 
+    previous_snapshot = latest_snapshot(db, run.company_id)
     snapshot = CompanyProfileSnapshot(
         company_id=run.company_id,
         run_id=run.id,
@@ -412,6 +414,17 @@ def complete_run(db: Session, run_id: UUID, payload: Any) -> dict[str, Any]:
         excel_sha256=digest,
         excel_file=excel_bytes,
     )
+    db.add(snapshot)
+    db.flush()
+    evidence_import = ingest_company_profile_snapshot(
+        db,
+        snapshot,
+        previous_snapshot,
+    )
+    snapshot.normalized_data = {
+        **(snapshot.normalized_data or {}),
+        "evidence_import": evidence_import,
+    }
     db.add(snapshot)
     run.status = "completed"
     run.progress_current = len(PROFILE_MODULE_KEYS)
@@ -437,10 +450,12 @@ def complete_run(db: Session, run_id: UUID, payload: Any) -> dict[str, Any]:
 
     cutoff = utcnow() - RETENTION
     db.execute(
-        delete(CompanyProfileSnapshot).where(
+        delete(CompanyProfileSnapshot)
+        .where(
             CompanyProfileSnapshot.company_id == run.company_id,
             CompanyProfileSnapshot.captured_at < cutoff,
         )
+        .execution_options(synchronize_session=False)
     )
     db.commit()
     db.refresh(snapshot)

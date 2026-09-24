@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import session as db_session
+from app.config import get_settings
 from app.models import AnalysisReport, Company, RiskEvent
 from app.schemas.company import (
     CompanyCreate,
@@ -23,6 +24,12 @@ from app.services.company_profile import (
     enable_supported_company,
     profile_company_suggestion,
     resolve_profile_company_name,
+)
+from app.services.demo_scope import (
+    DemoScopeError,
+    canonical_company_name,
+    demo_company_name,
+    ensure_demo_company,
 )
 from app.services.generic_ingestion import DailyIngestionService
 from app.services.qichacha_profile import refresh_company_qichacha_profile
@@ -48,9 +55,19 @@ def serialize_company(company: Company) -> CompanyRead:
     )
 
 
+def _scoped_company(company: Company | None) -> Company:
+    try:
+        return ensure_demo_company(company)
+    except DemoScopeError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+
 @router.get("", response_model=list[CompanyRead])
 def list_companies(db: Session = Depends(db_session.get_db)) -> list[CompanyRead]:
-    companies = db.execute(select(Company).order_by(Company.created_at.desc())).scalars()
+    statement = select(Company)
+    if demo_company_name():
+        statement = statement.where(Company.name == demo_company_name())
+    companies = db.execute(statement.order_by(Company.created_at.desc())).scalars()
     return [serialize_company(company) for company in companies]
 
 
@@ -59,14 +76,20 @@ def create_company(
     payload: CompanyCreate,
     db: Session = Depends(db_session.get_db),
 ) -> CompanyRead:
-    existing = db.execute(select(Company).where(Company.name == payload.name)).scalar_one_or_none()
+    try:
+        company_name = canonical_company_name(payload.name)
+    except DemoScopeError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    existing = db.execute(select(Company).where(Company.name == company_name)).scalar_one_or_none()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="公司名称已存在。",
         )
 
-    company = Company(**model_to_dict(payload))
+    values = model_to_dict(payload)
+    values["name"] = company_name
+    company = Company(**values)
     db.add(company)
     db.commit()
     db.refresh(company)
@@ -95,7 +118,10 @@ async def search_and_ingest_company(
                 "suggestion": suggestion,
             },
         )
-    company_name = resolve_profile_company_name(submitted_name) or submitted_name
+    try:
+        company_name = canonical_company_name(submitted_name)
+    except DemoScopeError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
     canonical_profile_name = resolve_profile_company_name(company_name)
     company = (
@@ -131,7 +157,11 @@ async def search_and_ingest_company(
     db.refresh(company)
 
     # 轻量版的目标企业优先入队并立即返回，避免等待原有公开源同步抓取。
-    if enable_supported_company(db, company) and payload.trigger_company_profile:
+    if (
+        get_settings().company_profile_worker_enabled
+        and enable_supported_company(db, company)
+        and payload.trigger_company_profile
+    ):
         company_profile_payload = create_or_reuse_run(db, company, force=False)
         return CompanySearchIngestResponse(
             company=serialize_company(company),
@@ -183,7 +213,11 @@ def resolve_company(
     name: str = Query(..., min_length=1),
     db: Session = Depends(db_session.get_db),
 ) -> CompanyRead:
-    company = get_company_by_ref(db, company_name=name)
+    try:
+        scoped_name = canonical_company_name(name)
+    except DemoScopeError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    company = get_company_by_ref(db, company_name=scoped_name)
     if not company:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="公司不存在。")
     return serialize_company(company)
@@ -191,9 +225,7 @@ def resolve_company(
 
 @router.get("/{company_id}", response_model=CompanyRead)
 def get_company(company_id: UUID, db: Session = Depends(db_session.get_db)) -> CompanyRead:
-    company = db.get(Company, company_id)
-    if not company:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="公司不存在。")
+    company = _scoped_company(db.get(Company, company_id))
     return serialize_company(company)
 
 
@@ -202,9 +234,7 @@ def get_dashboard_summary(
     company_id: UUID,
     db: Session = Depends(db_session.get_db),
 ) -> DashboardSummary:
-    company = db.get(Company, company_id)
-    if not company:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="公司不存在。")
+    company = _scoped_company(db.get(Company, company_id))
 
     risk_events = list(
         db.execute(

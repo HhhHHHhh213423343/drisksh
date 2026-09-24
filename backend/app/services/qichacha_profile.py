@@ -148,10 +148,11 @@ async def refresh_company_qichacha_profile(
     company: Company,
     *,
     client: QichachaProfileClient | None = None,
+    force: bool = False,
 ) -> Company:
     profile = dict(company.company_profile or {})
     current = profile.get(QICHACHA_PROFILE_KEY)
-    if isinstance(current, dict) and current.get("status") == "available":
+    if not force and isinstance(current, dict) and current.get("status") == "available":
         return company
 
     qichacha_client = client or QichachaProfileClient()

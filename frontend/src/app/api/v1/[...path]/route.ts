@@ -12,6 +12,14 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   if (contentType) headers.set("content-type", contentType);
   const collectionKey = request.headers.get("x-collection-key");
   if (collectionKey) headers.set("x-collection-key", collectionKey);
+  const cookie = request.headers.get("cookie");
+  if (cookie) headers.set("cookie", cookie);
+  headers.set(
+    "x-forwarded-proto",
+    request.headers.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", ""),
+  );
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) headers.set("x-forwarded-for", forwardedFor);
 
   const response = await fetch(target, {
     method: request.method,
@@ -23,7 +31,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   const responseHeaders = new Headers();
   const responseType = response.headers.get("content-type");
   if (responseType) responseHeaders.set("content-type", responseType);
-  for (const header of ["content-disposition", "content-length", "cache-control", "x-content-type-options"]) {
+  for (const header of ["content-disposition", "content-length", "cache-control", "x-content-type-options", "set-cookie"]) {
     const value = response.headers.get(header);
     if (value) responseHeaders.set(header, value);
   }

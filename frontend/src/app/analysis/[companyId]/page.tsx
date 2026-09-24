@@ -5,9 +5,9 @@ export default async function AnalysisPage({
   searchParams,
 }: {
   params: Promise<{ companyId: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; runId?: string }>;
 }) {
   const { companyId } = await params;
-  const { tab } = await searchParams;
-  return <AnalysisPlatform companyId={companyId} initialCategory={tab} />;
+  const { tab, runId } = await searchParams;
+  return <AnalysisPlatform companyId={companyId} initialCategory={tab} initialRunId={runId} />;
 }

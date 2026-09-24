@@ -181,33 +181,70 @@ def _company(
     )
 
 
+# 投后监测规则用中文分类（monitoring_rules.category），本模块历史上用英文维度键（legal/operations/...）
+# 直接按 risk_events.category 做等值匹配永远查不到数据。改为复用最近一次已完成分析的规则命中结果
+# （rule_evaluations.evidence），保证与「投后监测」页面展示的证据保持一致。
+CATEGORY_RULE_MAP: dict[str, tuple[str, ...]] = {
+    "operations": ("业务及经营风险",),
+    "finance": ("财务风险",),
+    "legal": ("法律风险", "公司治理风险", "内控风险", "其他风险"),
+    "brand": ("品牌舆情风险",),
+}
+
+
 def _events(db: Session, company_id: Any, category: str, limit: int) -> list[EventSnapshot]:
+    rule_categories = CATEGORY_RULE_MAP.get(category)
+    if not rule_categories:
+        return []
+    placeholders = ", ".join(f"'{value}'" for value in rule_categories)
     rows = _rows(
         db,
-        """
-        SELECT * FROM risk_events
-        WHERE company_id = :company_id AND category = :category
-        ORDER BY occurred_at DESC, created_at DESC
-        LIMIT :limit
-        """,
-        {"company_id": company_id, "category": category, "limit": limit},
-    )
-    return [
-        EventSnapshot(
-            id=row.get("id"),
-            category=str(row.get("category") or category),
-            severity=str(row.get("severity") or "一般"),
-            title=str(row.get("title") or ""),
-            content=str(row.get("content") or ""),
-            source_url=str(row.get("source_url") or ""),
-            source_name=str(row.get("source_name") or "未标注来源"),
-            occurred_at=_dt(row.get("occurred_at")),
-            created_at=_dt(row.get("created_at")),
-            sentiment=str(row.get("sentiment") or "neutral"),
-            extra=_json(row.get("extra_payload"), {}),
+        f"""
+        SELECT re.evidence AS evidence, re.severity AS severity, re.created_at AS created_at
+        FROM rule_evaluations re
+        JOIN monitoring_rules mr ON mr.id = re.rule_id
+        WHERE re.analysis_run_id = (
+            SELECT id FROM analysis_runs
+            WHERE company_id = :company_id AND status = 'completed'
+            ORDER BY created_at DESC
+            LIMIT 1
         )
-        for row in rows
-    ]
+        AND re.status = 'hit'
+        AND mr.category IN ({placeholders})
+        ORDER BY re.created_at DESC
+        """,
+        {"company_id": company_id},
+    )
+    seen: dict[str, EventSnapshot] = {}
+    for row in rows:
+        severity = str(row.get("severity") or "一般")
+        fallback_dt = _dt(row.get("created_at"))
+        for item in _json(row.get("evidence"), []) or []:
+            if not isinstance(item, dict):
+                continue
+            event_id = str(item.get("id") or item.get("title") or "")
+            if not event_id or event_id in seen:
+                continue
+            occurred = _dt(item.get("occurred_at")) or fallback_dt
+            seen[event_id] = EventSnapshot(
+                id=event_id,
+                category=category,
+                severity=severity,
+                title=str(item.get("title") or ""),
+                content=str(item.get("content") or ""),
+                source_url=str(item.get("source_url") or ""),
+                source_name=str(item.get("source_name") or "未标注来源"),
+                occurred_at=occurred,
+                created_at=occurred,
+                sentiment="neutral",
+                extra={},
+            )
+    events = sorted(
+        seen.values(),
+        key=lambda event: event.occurred_at or datetime.min.replace(tzinfo=timezone.utc),
+        reverse=True,
+    )
+    return events[:limit]
 
 
 def _industry_template(company: CompanySnapshot) -> str:
@@ -691,7 +728,7 @@ def _macro(db: Session, company: CompanySnapshot) -> dict[str, Any]:
             "source_name": str(row.get("source_name") or "官方宏观数据"),
             "source_url": source_url,
             "source_tag": "官方宏观指标",
-            "source_code": code,
+            "source_code": "pbc_macro" if code in {"lpr_1y", "m2_yoy"} else "nbs_macro",
             "published_at": _dt(row.get("collected_at")),
         })
     industry_events = []
@@ -703,7 +740,11 @@ def _macro(db: Session, company: CompanySnapshot) -> dict[str, Any]:
             "source_name": str(row.get("source_name") or "官方政策来源"),
             "source_url": source_url,
             "source_tag": "政策/行业事件",
-            "source_code": str(row.get("dimension") or "macro_event"),
+            "source_code": (
+                "ndrc_policy"
+                if "发展和改革" in str(row.get("source_name") or "")
+                else str(row.get("dimension") or "macro_event")
+            ),
             "published_at": _dt(row.get("published_at")),
         })
         industry_events.append({

@@ -46,8 +46,18 @@ progress::-moz-progress-bar { background: #78be20; }
 }
 
 @media print {
+  @page { size: A4 portrait; margin: 16mm 15mm 18mm; }
   .no-print { display: none !important; }
-  body { background: white; color: #152117; }
+  html, body { background: white; color: #152117; font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; }
   a { text-decoration: none; }
   .break-inside-avoid { break-inside: avoid; }
+  .report-document { width: 100%; max-width: none; font-size: 10.5pt; }
+  .report-cover { break-after: avoid; border-bottom: 1px solid #cfd8ca !important; padding-bottom: 8mm !important; }
+  .report-cover h1 { font-size: 22pt; line-height: 1.3; }
+  .report-status { border: 1px solid #cfd8ca; background: white !important; color: #38551d !important; }
+  .report-section { break-inside: avoid-page; margin-top: 5mm !important; padding-top: 4mm !important; padding-bottom: 4mm !important; border-top: 1px solid #dbe3d6 !important; border-bottom: 0 !important; }
+  .report-section h2 { break-after: avoid; font-size: 14pt; }
+  .report-section p { orphans: 3; widows: 3; line-height: 1.85; }
+  .evidence-index { overflow-wrap: anywhere; color: #66736d !important; }
+  .report-footer { break-inside: avoid; margin-top: 8mm !important; }
 }

@@ -42,5 +42,15 @@ backend/demo.db
 debug/
 output/
 output_test/
+data/uploads/
+backend/data/uploads/
+zeabur-direct-deploy/
 
 *.log
+
+.claude/
+.workbuddy/
+demo_output/
+inspect_*.mjs
+*.zip
+/node_modules

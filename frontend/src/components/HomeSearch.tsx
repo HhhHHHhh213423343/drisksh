@@ -13,6 +13,7 @@ type Company = {
   company_profile?: {
     akshare_profile?: { stock_code?: string; stock_name?: string; status?: string };
     qyyjt_profile?: { enabled?: boolean };
+    monitoring_parent_id?: string;
   };
 };
 
@@ -26,7 +27,12 @@ function stockCode(company: Company) {
 }
 
 function companyRoute(company: Company) {
-  return `/analysis/${company.id}?tab=${company.company_profile?.qyyjt_profile?.enabled ? "profile" : "macro"}`;
+  return `/analysis/${company.id}?tab=monitoring`;
+}
+
+function localMonth() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
 export default function HomeSearch() {
@@ -35,17 +41,18 @@ export default function HomeSearch() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [busy, setBusy] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [runStage, setRunStage] = useState("");
   const [error, setError] = useState("");
   const [suggestion, setSuggestion] = useState<CompanySuggestion | null>(null);
 
   useEffect(() => {
     fetch("/api/v1/companies", { cache: "no-store" })
-      .then(async (response) => {
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.detail ?? "无法读取企业列表");
-        return payload;
+      .then(async (companiesResponse) => {
+        const companyPayload = await companiesResponse.json();
+        if (!companiesResponse.ok) throw new Error(companyPayload.detail ?? "无法读取企业列表");
+        return companyPayload;
       })
-      .then(setCompanies)
+      .then((items: Company[]) => setCompanies(items.filter((item) => !item.company_profile?.monitoring_parent_id)))
       .catch(() => setCompanies([]));
   }, []);
 
@@ -65,38 +72,49 @@ export default function HomeSearch() {
   }, [companies, query]);
 
   async function runSearch(rawInput: string) {
-    const input = rawInput.trim();
+    const input = rawInput?.trim() || "";
     if (!input) { setError("请输入公司名称、股票简称或 6 位股票代码"); return; }
     setBusy(true);
     setError("");
     setSuggestion(null);
+    setRunStage("creating");
     try {
       const isStockCode = /^\d{6}$/.test(input);
-      const response = await fetch("/api/v1/companies/search-and-ingest", {
+      const response = await fetch("/api/v1/analysis-runs", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          name: input,
+          company_name: input,
           stock_code: isStockCode ? input : "",
-          trigger_ingestion: true,
-          max_results_per_source: 5,
+          requested_period: localMonth(),
+          max_results_per_source: 8,
+          max_documents: 60,
+          lookback_days: 30,
         }),
       });
       const payload = await response.json();
       if (!response.ok) {
-        const detail = payload.detail;
-        if (response.status === 409 && detail?.code === "company_confirmation_required" && detail.suggestion?.name) {
-          setSuggestion(detail.suggestion);
-          setError(detail.message ?? "请确认要分析的企业。");
-          return;
-        }
-        throw new Error(typeof detail === "string" ? detail : "企业检索失败");
+        throw new Error(typeof payload.detail === "string" ? payload.detail : "企业检索失败");
       }
-      const company = payload.company ?? payload;
-      const id = company.id ?? payload.company_id;
+      const company = payload.company;
+      const id = company?.id;
+      const runId = payload.analysis_run?.id;
       if (!id) throw new Error("后端未返回企业 ID");
-      const profileEnabled = Boolean(payload.company_profile?.enabled || company.company_profile?.qyyjt_profile?.enabled);
-      router.push(`/analysis/${id}?tab=${profileEnabled ? "profile" : "macro"}`);
+      if (!runId) throw new Error("后端未返回分析任务 ID");
+      let run = payload.analysis_run;
+      for (let attempt = 0; attempt < 300 && ["queued", "running"].includes(run.status); attempt += 1) {
+        setRunStage(run.current_stage || run.status);
+        await new Promise((resolve) => window.setTimeout(resolve, 1000));
+        const statusResponse = await fetch(`/api/v1/analysis-runs/${runId}`, { cache: "no-store" });
+        run = await statusResponse.json();
+        if (!statusResponse.ok) throw new Error(run.detail ?? "分析进度读取失败");
+      }
+      if (run.status === "failed") throw new Error(run.error_message || "实时分析失败");
+      if (run.status !== "completed") {
+        router.push(`/analysis/${id}?tab=monitoring&runId=${runId}`);
+        return;
+      }
+      router.push(`/analysis/${id}?tab=monitoring&runId=${runId}`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "企业检索失败");
     } finally {
@@ -109,11 +127,16 @@ export default function HomeSearch() {
     await runSearch(query);
   }
 
-  const progressText = elapsed < 8
-    ? "正在识别企业与证券代码"
-    : elapsed < 25
-      ? "正在获取公开财务数据与公告"
-      : "外部数据源响应较慢，检索仍在继续";
+  async function logout() {
+    await fetch("/api/v1/auth/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
+
+  const progressText = runStage === "refresh_company_profile" ? "正在实时识别企业并刷新财务数据"
+    : runStage === "collect_public_sources" ? "正在抓取公开网页、公告与监管来源"
+      : runStage === "discover_related_entities" ? "正在整理关联主体候选"
+        : runStage === "evaluate_rules" ? "正在形成风险结论"
+          : elapsed < 8 ? "正在准备分析" : "信息更新较慢，分析仍在继续";
 
   return (
     <main className="min-h-[100dvh] bg-[#07110b] text-white">
@@ -123,20 +146,21 @@ export default function HomeSearch() {
             <div className="grid h-12 w-12 place-items-center rounded-xl bg-white text-2xl font-black text-[#172019]">D.</div>
             <div><p className="text-xs font-semibold tracking-[.28em] text-[#85c82b]">RISK INTELLIGENCE</p><h1 className="text-xl font-semibold">D.Risk AI</h1></div>
           </div>
-          <div className="hidden items-center gap-2 text-sm text-white/60 sm:flex"><ShieldCheck size={18} className="text-[#85c82b]" />公开数据　证据可追溯　缺失不臆测</div>
+          <div className="hidden items-center gap-4 text-sm text-white/60 sm:flex"><span className="flex items-center gap-2"><ShieldCheck size={18} className="text-[#85c82b]" />公开数据　证据可追溯　缺失不臆测</span><button onClick={() => void logout()} className="rounded-lg border border-white/15 px-3 py-1.5 text-xs hover:bg-white/5">退出</button></div>
         </header>
 
         <section className="grid flex-1 items-center gap-14 py-14 lg:grid-cols-[1.08fr_.92fr]">
           <div>
             <p className="mb-5 text-sm font-semibold tracking-[.3em] text-[#85c82b]">ENTERPRISE RISK WORKSPACE</p>
             <h2 className="max-w-3xl text-5xl font-semibold leading-[1.08] tracking-tight lg:text-7xl">从一家企业开始，<br /><span className="text-[#9bdb45]">让风险有据可查。</span></h2>
-            <p className="mt-7 max-w-2xl text-lg leading-8 text-white/60">输入公司名称或股票代码，联动五个分析 Agent，并保留每条结论的数据来源与覆盖质量。</p>
+            <p className="mt-7 max-w-2xl text-lg leading-8 text-white/60">输入公司名称或股票代码，联动分析流程，并保留每条结论的数据来源与覆盖质量。</p>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[.06] p-7 shadow-2xl backdrop-blur">
             <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#85c82b] text-[#07110b]"><Building2 /></div>
             <h3 className="text-2xl font-semibold">智能检索企业</h3>
-            <p className="mt-2 text-sm leading-6 text-white/55">支持公司全称、股票简称或 6 位股票代码。A 股上市公司优先匹配 AkShare 财务数据。</p>
+            <p className="mt-2 text-sm leading-6 text-white/55">输入公司名称或股票代码，获取本月风险结论、重点事项和投后建议。</p>
+
             <form onSubmit={submit} className="mt-7">
               <label className="mb-2 block text-sm font-medium text-white/80" htmlFor="company-search">公司名称或股票代码</label>
               <div className="flex rounded-2xl bg-white p-2 text-[#172019] focus-within:ring-2 focus-within:ring-[#85c82b]">

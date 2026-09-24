@@ -154,7 +154,7 @@ def _resolve_stock(company_name: str, *, stock_code: str = "") -> dict[str, Any]
         }
 
     local_match = _resolve_local_stock(company_name)
-    if local_match:
+    if local_match and _plausible_match(company_name, local_match.get("matched_name", "")):
         return local_match
 
     resolution_errors: list[dict[str, str]] = []
@@ -179,7 +179,7 @@ def _resolve_stock(company_name: str, *, stock_code: str = "") -> dict[str, Any]
 
         resolution_sources.append(source_name)
         match = _match_stock_rows(company_name, rows)
-        if match:
+        if match and _plausible_match(company_name, match.get("matched_name", "")):
             match["resolution_source"] = source_name
             match["resolution_sources"] = resolution_sources
             match["resolution_errors"] = resolution_errors
@@ -193,7 +193,7 @@ def _resolve_stock(company_name: str, *, stock_code: str = "") -> dict[str, Any]
             rows = _records_from_dataframe(aggregate_function())
             resolution_sources.append("沪深京汇总")
             match = _match_stock_rows(company_name, rows)
-            if match:
+            if match and _plausible_match(company_name, match.get("matched_name", "")):
                 match["resolution_source"] = "沪深京汇总"
                 match["resolution_sources"] = resolution_sources
                 match["resolution_errors"] = resolution_errors
@@ -256,13 +256,35 @@ def _match_stock_rows(company_name: str, rows: list[dict[str, Any]]) -> dict[str
                     "stock_name": name,
                     "matched_name": candidate_name,
                 }
-            if not best and normalized_name[:2] and normalized_name[:2] in normalized_query:
+            if (
+                not best
+                and len(normalized_name) >= 4
+                and normalized_name[:4] in normalized_query
+            ):
                 best = {
                     "stock_code": code,
                     "stock_name": name,
                     "matched_name": candidate_name,
                 }
     return best
+
+
+def _plausible_match(company_name: str, matched_name: str) -> bool:
+    """判断上市公司解析结果是否可以采信。
+
+    A 股简称里“金融”“科技”“控股”等通用词非常常见，仅凭两三个字的重合就把一家
+    非上市主体匹配到上市公司，会把错误主体的财报带进风险评估。这里要求候选名称
+    与查询名称存在足够强的字面重合，否则视为不匹配。
+    """
+
+    query = _normalize_name(company_name)
+    candidate = _normalize_name(matched_name)
+    if not query or not candidate:
+        return False
+    if candidate in query or query in candidate:
+        return True
+    overlap = len(set(candidate) & set(query))
+    return overlap >= max(3, len(candidate) - 1)
 
 
 def _fetch_individual_info(stock_code: str) -> dict[str, Any]:

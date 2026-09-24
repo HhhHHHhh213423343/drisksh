@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Activity, ArrowLeft, BarChart3, BookOpen, Building2, CheckCircle2,
-  ChevronRight, FileText, Gavel, Globe2, Loader2, MessageSquareText,
+  ChevronRight, ClipboardCheck, FileText, Gavel, Globe2, Loader2, LogOut, MessageSquareText,
   RefreshCw, Search, ShieldAlert, Sparkles, TrendingUp, Warehouse,
 } from "lucide-react";
 import CompanyProfilePanel from "./CompanyProfilePanel";
+import MonitoringWorkspace from "./MonitoringWorkspace";
 
 type Category = "macro" | "operations" | "finance" | "legal" | "brand";
 type PlainValue = string | number | boolean | null | undefined;
@@ -231,9 +232,11 @@ function ReportPanel({ companyId, companyName, previews, current, onStatus }: { 
   </aside>;
 }
 
-export default function AnalysisPlatform({ companyId, initialCategory }: { companyId: string; initialCategory?: string }) {
+export default function AnalysisPlatform({ companyId, initialCategory, initialRunId }: { companyId: string; initialCategory?: string; initialRunId?: string }) {
   const router = useRouter();
+  const [showMonitoring, setShowMonitoring] = useState(initialCategory === "monitoring" || (!isCategory(initialCategory) && initialCategory !== "profile"));
   const [showProfile, setShowProfile] = useState(initialCategory === "profile");
+  const [profileWorkerEnabled, setProfileWorkerEnabled] = useState(false);
   const [category, setCategory] = useState<Category>(isCategory(initialCategory) ? initialCategory : "macro");
   const [company, setCompany] = useState<Company | null>(null);
   const [previews, setPreviews] = useState<Partial<Record<Category, Preview>>>({});
@@ -255,10 +258,17 @@ export default function AnalysisPlatform({ companyId, initialCategory }: { compa
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Agent 分析加载失败"); } finally { setLoading(false); }
   }
   async function loadCompany() {
-    const response = await fetch(`/api/v1/companies/${companyId}`, { cache: "no-store" });
-    const payload = await response.json();
-    if (!response.ok) throw new Error(payload.detail ?? "企业档案加载失败");
+    const [companyResponse, settingsResponse] = await Promise.all([
+      fetch(`/api/v1/companies/${companyId}`, { cache: "no-store" }),
+      fetch("/api/v1/settings/status", { cache: "no-store" }),
+    ]);
+    const payload = await companyResponse.json();
+    const settings = await settingsResponse.json();
+    if (!companyResponse.ok) throw new Error(payload.detail ?? "企业档案加载失败");
     setCompany(payload);
+    if (settingsResponse.ok) {
+      setProfileWorkerEnabled(Boolean(settings.company_profile_worker_enabled));
+    }
   }
   async function loadReviewQueue() {
     const response = await fetch(`/api/v1/authoritative-ingestion/review-queue?company_id=${companyId}&review_status=pending&limit=100`, { cache: "no-store" });
@@ -307,32 +317,36 @@ export default function AnalysisPlatform({ companyId, initialCategory }: { compa
   }
   useEffect(() => { void loadCompany().catch((reason) => setError(reason.message)); }, [companyId]);
   useEffect(() => { void loadReviewQueue().catch((reason) => setError(reason.message)); }, [companyId]);
-  useEffect(() => { if (!showProfile) void load(category); }, [category, showProfile]);
+  useEffect(() => { if (!showProfile && !showMonitoring) void load(category); }, [category, showProfile, showMonitoring]);
   useEffect(() => { if (!notice) return; const timer = window.setTimeout(() => setNotice(""), 5000); return () => window.clearTimeout(timer); }, [notice]);
   const qualityLabel = useMemo(() => preview?.data_quality.status === "complete" ? "数据较完整" : preview?.data_quality.status === "partial" ? "部分数据可用" : "数据待补充", [preview]);
 
-  function changeCategory(next: Category) { setShowProfile(false); setCategory(next); router.replace(`/analysis/${companyId}?tab=${next}`, { scroll: false }); }
-  function openProfile() { setShowProfile(true); router.replace(`/analysis/${companyId}?tab=profile`, { scroll: false }); }
+  function changeCategory(next: Category) { setShowMonitoring(false); setShowProfile(false); setCategory(next); router.replace(`/analysis/${companyId}?tab=${next}`, { scroll: false }); }
+  function openMonitoring() { setShowMonitoring(true); setShowProfile(false); router.replace(`/analysis/${companyId}?tab=monitoring${initialRunId ? `&runId=${initialRunId}` : ""}`, { scroll: false }); }
+  function openProfile() { setShowMonitoring(false); setShowProfile(true); router.replace(`/analysis/${companyId}?tab=profile`, { scroll: false }); }
+  async function logout() { await fetch("/api/v1/auth/logout", { method: "POST" }); window.location.href = "/login"; }
 
   return <div className="min-h-screen lg:grid lg:grid-cols-[286px_1fr]">
     <aside className="bg-[#06110a] px-4 py-5 text-white lg:fixed lg:inset-y-0 lg:w-[286px] lg:overflow-y-auto">
       <button onClick={() => router.push("/")} className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left"><div className="grid h-11 w-11 place-items-center rounded-xl bg-white text-xl font-black text-[#172019]">D.</div><div><p className="text-[10px] font-semibold tracking-[.24em] text-[#86c82d]">RISK INTELLIGENCE</p><p className="font-semibold">D.Risk AI</p></div></button>
-      <div className="my-5 border-l-2 border-[#78be20] pl-4 text-xs leading-5 text-white/55">Enterprise risk analysis workspace<br />基于证据的企业风险工作台</div>
-      <p className="px-2 py-3 text-[11px] font-semibold tracking-[.2em] text-[#78be20]">D.COMPANY</p>
-      <button onClick={openProfile} className={`mb-3 flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${showProfile ? "border-[#5f941c] bg-[#14240e] text-white" : "border-transparent text-white/65 hover:bg-white/5"}`}><span className={`grid h-9 w-9 place-items-center rounded-lg ${showProfile ? "bg-[#78be20] text-[#102006]" : "bg-white/[.07] text-[#78be20]"}`}><Building2 size={18} /></span><span><b className="block text-sm font-medium">企业全景</b><small className="text-[11px] text-white/40">企业预警通八模块</small></span></button>
-      <p className="px-2 py-3 text-[11px] font-semibold tracking-[.2em] text-[#78be20]">D.ANALYSIS</p>
-      <nav className="space-y-2"><button onClick={()=>router.push("/")} className="mb-3 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-white/65 hover:bg-white/5"><Search size={18} />重新检索企业</button>{CATEGORIES.map((item)=>{const config=CATEGORY_CONFIG[item]; const Icon=config.icon; const active=!showProfile && item===category; return <button key={item} onClick={()=>changeCategory(item)} className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${active ? "border-[#5f941c] bg-[#14240e] text-white" : "border-transparent text-white/65 hover:bg-white/5"}`}><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${active ? "bg-[#78be20] text-[#102006]" : "bg-white/[.07] text-[#78be20]"}`}><Icon size={18} /></span><span><b className="block text-sm font-medium">{config.label}</b><small className="text-[11px] text-white/40">{config.description}</small></span></button>})}</nav>
+      <div className="my-5 border-l-2 border-[#78be20] pl-4 text-xs leading-5 text-white/55">企业投后风险监测与月报</div>
+      <p className="px-2 py-3 text-[11px] font-semibold tracking-[.14em] text-[#78be20]">投后管理</p>
+      <button onClick={openMonitoring} className={`mb-3 flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${showMonitoring ? "border-[#5f941c] bg-[#14240e] text-white" : "border-transparent text-white/65 hover:bg-white/5"}`}><span className={`grid h-9 w-9 place-items-center rounded-lg ${showMonitoring ? "bg-[#78be20] text-[#102006]" : "bg-white/[.07] text-[#78be20]"}`}><ClipboardCheck size={18} /></span><span><b className="block text-sm font-medium">投后监测</b><small className="text-[11px] text-white/40">风险结论 · 补充材料 · 月报</small></span></button>
+      {profileWorkerEnabled && <><p className="px-2 py-3 text-[11px] font-semibold tracking-[.14em] text-[#78be20]">企业信息</p><button onClick={openProfile} className={`mb-3 flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${showProfile ? "border-[#5f941c] bg-[#14240e] text-white" : "border-transparent text-white/65 hover:bg-white/5"}`}><span className={`grid h-9 w-9 place-items-center rounded-lg ${showProfile ? "bg-[#78be20] text-[#102006]" : "bg-white/[.07] text-[#78be20]"}`}><Building2 size={18} /></span><span><b className="block text-sm font-medium">企业全景</b><small className="text-[11px] text-white/40">企业预警通八模块</small></span></button></>}
+      <p className="px-2 py-3 text-[11px] font-semibold tracking-[.14em] text-[#78be20]">专项分析</p>
+      <nav className="space-y-2"><button onClick={()=>router.push("/")} className="mb-3 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-white/65 hover:bg-white/5"><Search size={18} />重新检索企业</button>{CATEGORIES.map((item)=>{const config=CATEGORY_CONFIG[item]; const Icon=config.icon; const active=!showMonitoring && !showProfile && item===category; return <button key={item} onClick={()=>changeCategory(item)} className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${active ? "border-[#5f941c] bg-[#14240e] text-white" : "border-transparent text-white/65 hover:bg-white/5"}`}><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${active ? "bg-[#78be20] text-[#102006]" : "bg-white/[.07] text-[#78be20]"}`}><Icon size={18} /></span><span><b className="block text-sm font-medium">{config.label}</b><small className="text-[11px] text-white/40">{config.description}</small></span></button>})}</nav>
       <button onClick={() => router.push(`/reports?companyId=${companyId}`)} className="mt-5 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-white/65 hover:bg-white/5"><FileText size={18} className="text-[#78be20]" />历史分析报告</button>
-      <p className="mt-3 px-2 py-3 text-[11px] font-semibold tracking-[.2em] text-[#78be20]">D.ASK</p><div className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/55"><BookOpen size={18} className="text-[#78be20]" />Knowledge Base Q&A</div>
+      <p className="mt-3 px-2 py-3 text-[11px] font-semibold tracking-[.14em] text-[#78be20]">知识问答</p><div className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/55"><BookOpen size={18} className="text-[#78be20]" />企业知识库</div>
+      <button onClick={() => void logout()} className="mt-4 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-white/55 hover:bg-white/5"><LogOut size={18} className="text-[#78be20]" />退出内部账号</button>
     </aside>
 
     <main className="min-w-0 lg:col-start-2">
-      <header className="sticky top-0 z-30 border-b border-[#dfe5da] bg-[#f6f8f3]/95 px-5 py-4 backdrop-blur md:px-8"><div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4"><div className="min-w-0"><div className="flex items-center gap-2 text-xs font-semibold text-[#5e8f27]"><Building2 size={15} />{showProfile ? "D.Company / 企业全景" : `D.Analysis / ${CATEGORY_CONFIG[category].short}`}</div><h1 className="mt-1 truncate text-xl font-semibold">{company?.name ?? preview?.company_name ?? "企业分析加载中"}</h1></div><div className="hidden items-center gap-3 md:flex"><span className="rounded-full border border-[#cfdbc3] bg-white px-3 py-1.5 text-xs text-[#687168]">{company?.industry || "行业待识别"} · {company?.region || "地区待识别"}</span>{!showProfile && <button onClick={()=>category === "macro" ? void refreshMacro() : void refreshAuthoritative()} disabled={authoritativeRefreshing || Boolean(refreshRun && ["queued", "running"].includes(refreshRun.status))} className="grid h-9 w-9 place-items-center rounded-full border border-[#d8ded3] bg-white disabled:opacity-50" title={category === "macro" ? "刷新宏观与行业数据" : "刷新权威数据源并重新分析"}>{(authoritativeRefreshing && category !== "macro") || (refreshRun && ["queued", "running"].includes(refreshRun.status) && category === "macro") ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}</button>}</div></div></header>
+      <header className="sticky top-0 z-30 border-b border-[#dfe5da] bg-[#f6f8f3]/95 px-5 py-4 backdrop-blur md:px-8"><div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4"><div className="min-w-0"><div className="flex items-center gap-2 text-xs font-semibold text-[#5e8f27]"><Building2 size={15} />{showMonitoring ? "投后监测" : showProfile ? "企业全景" : CATEGORY_CONFIG[category].short}</div><h1 className="mt-1 truncate text-xl font-semibold">{company?.name ?? preview?.company_name ?? "企业分析加载中"}</h1></div><div className="hidden items-center gap-3 md:flex"><span className="rounded-full border border-[#cfdbc3] bg-white px-3 py-1.5 text-xs text-[#687168]">{company?.industry || "行业待识别"} · {company?.region || "地区待识别"}</span>{!showMonitoring && !showProfile && <button onClick={()=>category === "macro" ? void refreshMacro() : void refreshAuthoritative()} disabled={authoritativeRefreshing || Boolean(refreshRun && ["queued", "running"].includes(refreshRun.status))} className="grid h-9 w-9 place-items-center rounded-full border border-[#d8ded3] bg-white disabled:opacity-50" title={category === "macro" ? "刷新宏观与行业数据" : "刷新权威数据源并重新分析"}>{(authoritativeRefreshing && category !== "macro") || (refreshRun && ["queued", "running"].includes(refreshRun.status) && category === "macro") ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}</button>}</div></div></header>
 
       <div className="mx-auto max-w-[1500px] px-5 py-7 md:px-8">
         {notice && <div className="mb-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"><CheckCircle2 size={17} />{notice}</div>}
         {error && <div className="mb-5 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"><ShieldAlert size={17} />{error}</div>}
-        {showProfile ? <CompanyProfilePanel companyId={companyId} companyName={company?.name ?? "上海携程金融信息服务有限公司"} onStatus={setNotice} /> : <>
+        {showMonitoring ? <MonitoringWorkspace companyId={companyId} companyName={company?.name ?? "目标公司"} initialRunId={initialRunId} onStatus={setNotice} /> : showProfile ? <CompanyProfilePanel companyId={companyId} companyName={company?.name ?? "上海携程金融信息服务有限公司"} onStatus={setNotice} /> : <>
         {category === "macro" && refreshRun && ["queued", "running"].includes(refreshRun.status) && <section className="mb-5 rounded-2xl border border-[#cfe3b7] bg-[#f3f8ed] px-5 py-4" aria-live="polite"><div className="flex items-center justify-between gap-3 text-sm"><span className="flex items-center gap-2 font-semibold text-[#4f771f]"><Loader2 size={16} className="animate-spin" />{refreshRun.message || "正在刷新宏观与行业数据"}</span><span className="text-xs text-[#6f7c69]">{refreshRun.progress_current}/{refreshRun.progress_total}</span></div><progress value={refreshRun.progress_current} max={refreshRun.progress_total} className="mt-3 h-2 w-full accent-[#78be20]" /></section>}
         {loading && !preview ? <div className="space-y-5"><div className="loading-bar h-36 rounded-2xl bg-[#e7ece2]" /><div className="grid gap-4 md:grid-cols-3">{[1,2,3].map((x)=><div key={x} className="loading-bar h-28 rounded-2xl bg-[#e7ece2]" />)}</div></div> : preview && <>
           <section className="rounded-3xl border border-[#dfe5da] bg-white p-6 md:p-8"><div className="flex flex-col justify-between gap-5 md:flex-row md:items-start"><div className="max-w-4xl"><div className="mb-3 flex flex-wrap items-center gap-2"><span className="inline-flex items-center gap-2 rounded-full bg-[#eef7e2] px-3 py-1.5 text-xs font-semibold text-[#4c7e18]"><Sparkles size={14} />{CATEGORY_CONFIG[category].label} Agent</span><span className="rounded-full border border-[#dce7d2] bg-white px-3 py-1.5 text-xs text-[#63715e]">{TEMPLATE_LABELS[preview.industry_template] ?? preview.industry_template}</span></div><h2 className="text-2xl font-semibold leading-tight md:text-3xl">{preview.summary}</h2><p className="mt-4 text-sm leading-7 text-[#69716a]">检索阶段：{preview.retrieval_stage} · 生成时间：{dateLabel(preview.generated_at)}</p></div><div className="min-w-[190px] rounded-2xl bg-[#f5f8f1] p-4"><p className="text-xs text-[#747d75]">证据覆盖率</p><p className="mt-1 text-3xl font-semibold text-[#4f8619]">{preview.data_quality.coverage_percent}%</p><p className="mt-1 text-xs text-[#747d75]">{qualityLabel} · {preview.data_quality.evidence_count} 条证据</p><p className="mt-2 text-[10px] leading-4 text-[#899087]">完整度40% · 时效20% · 权威25% · 交叉验证15%</p></div></div></section>
