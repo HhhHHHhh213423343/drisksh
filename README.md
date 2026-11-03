@@ -185,6 +185,8 @@ python -m enterprise_sentinel.debug_probe \
 
 接口、状态语义和运行链路见 [docs/post-investment-monitoring.md](docs/post-investment-monitoring.md)。
 
+部署后重建携程金融月度数据并生成月报：`python -m app.bootstrap_monthly --period 2026-10 --generate`（在 backend 目录执行），详见 [docs/monitoring-report-deploy.md](docs/monitoring-report-deploy.md)。
+
 ## D.Risk 每日公开数据接入
 
 第一版 Web 数据接入走“上市公司优先、每日批处理、合规稳定优先”的路线，不绕过验证码、不模拟登录，也不硬爬强反爬商业站点。

@@ -857,3 +857,42 @@ def test_redaction_keeps_record_ids_but_masks_personal_numbers() -> None:
     text = redact_sensitive_text("卡号6222 0212 3456 7890 123，手机13812345678，身份证11010519491231002X")
     assert "[账号已脱敏]" in text and "[手机号已脱敏]" in text and "[身份证号已脱敏]" in text
     assert "13812345678" not in text and "6222" not in text
+
+
+def test_llm_service_accepts_report_timeout() -> None:
+    import inspect
+
+    from app.services.llm import LLMService
+
+    # 月报调用传入 timeout，接口签名缺少该参数时改写会静默退回确定性草稿。
+    assert "timeout" in inspect.signature(LLMService.complete_json).parameters
+
+
+def test_bootstrap_rebuilds_october_data_and_report(monkeypatch, tmp_path) -> None:
+    from sqlalchemy.orm import sessionmaker
+
+    from app import bootstrap_monthly
+
+    monkeypatch.setenv("LLM_BASE_URL", "")
+    monkeypatch.setenv("LLM_MODEL", "")
+    monkeypatch.setenv("LLM_API_KEY", "")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "")
+    get_settings.cache_clear()
+    engine = create_engine(f"sqlite:///{tmp_path / 'bootstrap.db'}", future=True)
+    monkeypatch.setattr(bootstrap_monthly, "engine", engine)
+    monkeypatch.setattr(bootstrap_monthly, "SessionLocal", sessionmaker(bind=engine, future=True))
+
+    result = bootstrap_monthly.bootstrap("2026-10", generate=True, export=tmp_path / "report.xlsx")
+    imported = result["workbooks"]["携程金融-2026年10月外部风险数据(企业预警通+公开检索).xlsx"]
+    assert imported["risk_events"] == 14 and imported["industry_events"] == 23
+    assert result["macro"]["宏观指标_2026-10.csv"] == {"added": 7, "updated": 0}
+    assert set(result["report"]["ratings"]) == set(RISK_SECTIONS)
+    workbook = load_workbook(tmp_path / "report.xlsx")
+    entity_rows = [row for row in workbook["监测实体"].iter_rows(values_only=True) if isinstance(row[0], int)]
+    assert len(entity_rows) == 11
+
+    rerun = bootstrap_monthly.bootstrap("2026-10")
+    assert all(item["risk_events"] == 0 and item["industry_events"] == 0 for item in rerun["workbooks"].values())
+    with Session(engine) as db:
+        indicators = [item for item in _macro_context(db, "2026-10") if item["kind"] == "indicator"]
+    assert ("2026-10", 49.3) in [(item["period"], item["value"]) for item in indicators]

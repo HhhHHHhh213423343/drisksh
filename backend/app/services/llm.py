@@ -91,6 +91,7 @@ class LLMService:
         system_prompt: str,
         user_payload: dict[str, Any],
         max_output_tokens: int = 4000,
+        timeout: float = 90,
     ) -> LLMResult | None:
         if not self.is_configured:
             return None
@@ -140,7 +141,7 @@ class LLMService:
         if "api.deepseek.com" in self.settings.llm_base_url:
             request_payload["response_format"] = {"type": "json_object"}
             request_payload["thinking"] = {"type": "disabled"}
-        with httpx.Client(timeout=90, follow_redirects=True) as client:
+        with httpx.Client(timeout=timeout, follow_redirects=True) as client:
             response = client.post(url, headers=headers, json=request_payload)
             response.raise_for_status()
             raw = response.json()
