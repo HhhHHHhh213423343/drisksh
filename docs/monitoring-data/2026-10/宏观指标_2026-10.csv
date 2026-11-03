@@ -1,0 +1,8 @@
+indicator_code,indicator_name,period,value,unit,frequency,source_name,published_at,source_url,note
+manufacturing_pmi,制造业 PMI,2026-10,49.3,点,月度,国家统计局,2026-10-31,https://www.stats.gov.cn/sj/zxfb/202610/t20261031_1965718.html,比上月下降0.8个百分点
+non_manufacturing_pmi,非制造业 PMI,2026-10,49.7,点,月度,国家统计局,2026-10-31,https://www.stats.gov.cn/sj/zxfb/202610/t20261031_1965718.html,非制造业商务活动指数，比上月下降0.5个百分点
+gdp_yoy,GDP 同比增长,2026-Q3,4.5,%,季度,国家统计局,2026-10-20,https://www.stats.gov.cn/sj/zxfb/202610/t20261020_1965658.html,前三季度同比增长4.6%
+cpi_yoy,CPI 同比增长,2026-09,0.9,%,月度,国家统计局,2026-10-14,https://www.stats.gov.cn/sj/zxfb/202610/t20261014_1965477.html,10月CPI预计11月中旬发布
+ppi_yoy,PPI 同比增长,2026-09,5.0,%,月度,国家统计局,2026-10-14,https://www.stats.gov.cn/sj/zxfb/202610/t20261014_1965476.html,环比上涨1.2%
+lpr_1y,1 年期 LPR,2026-10-20,3.0,%,月度,中国人民银行/全国银行间同业拆借中心,2026-10-20,https://www.chinamoney.com.cn/chinese/bklpr/,5年期以上LPR为3.5%，与上月持平
+m2_yoy,M2 同比增长,2026-09,7.2,%,月度,中国人民银行,2026-10-14,https://www.pbc.gov.cn/diaochatongjisi/116219/116225/2026101417073743604/index.html,9月末M2余额359.63万亿元
