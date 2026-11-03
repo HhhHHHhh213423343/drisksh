@@ -162,11 +162,11 @@ python -m enterprise_sentinel.debug_probe \
 
 ## D.Risk 投后监测
 
-投后监测模块将“银联商务2026年股权投资风险监测项目”79条规则作为版本化规则集。每次点击开始分析都会创建新的 `analysis_run`，重新请求 A 股数据、公司官网、监管披露和权威公开来源；数据库只用于历史对比和留痕。
+投后监测模块将“银联商务2026年股权投资风险监测项目”79条规则及3条携程品牌规则（共82条）作为版本化规则集。每次点击开始分析都会创建新的 `analysis_run`，重新请求 A 股数据、公司官网、监管披露和权威公开来源；数据库只用于历史对比和留痕。
 
 主要能力：
 
-- 79条规则全量评估，严格区分 `hit`、`not_hit`、`insufficient_data` 和 `not_applicable`。
+- 已启用规则全量评估（携程品牌规则仅默认启用于名称含“携程”的被投企业），严格区分 `hit`、`not_hit`、`insufficient_data` 和 `not_applicable`。
 - 上传 XLSX、XLS、CSV、PDF、DOCX、TXT、PNG、JPG；扫描文件使用中文 OCR。
 - 识别结果保留期间、单位、页码/单元格和置信度，低置信度字段需人工确认。
 - 关联企业先进入候选清单，确认后才在下一次实时分析中采集。
@@ -184,6 +184,8 @@ python -m enterprise_sentinel.debug_probe \
 `DEEPSEEK_API_KEY` 用于分析、归纳和报告写作，不等同于网页搜索。需要新闻与公开网页检索时另行填写 `SERPER_API_KEY`；A股财务和国家宏观指标通过 AkShare/官方来源采集，不依赖 Serper。
 
 接口、状态语义和运行链路见 [docs/post-investment-monitoring.md](docs/post-investment-monitoring.md)。
+
+部署后重建携程金融月度数据并生成月报：`python -m app.bootstrap_monthly --period 2026-10 --generate`（在 backend 目录执行），详见 [docs/monitoring-report-deploy.md](docs/monitoring-report-deploy.md)。
 
 ## D.Risk 每日公开数据接入
 

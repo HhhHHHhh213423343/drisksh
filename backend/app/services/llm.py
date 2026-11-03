@@ -14,7 +14,8 @@ from app.config import get_settings
 from app.models import LLMCache
 
 
-PROMPT_VERSION = "monitoring-v1"
+# v2：脱敏不再误伤证据编号，旧缓存中的模型输出可能含被脱敏的编号。
+PROMPT_VERSION = "monitoring-v2"
 
 
 @dataclass
@@ -25,13 +26,27 @@ class LLMResult:
     cached: bool = False
 
 
+# 证据编号是记录 UUID，其中的数字片段会被误判为账号或手机号，脱敏前先整体保护。
+_RECORD_ID = re.compile(
+    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+    r"|(?<![0-9a-fA-F])(?=[0-9]*[a-fA-F])[0-9a-fA-F]{32}(?![0-9a-fA-F])"
+)
+
+
 def redact_sensitive_text(value: str) -> str:
-    text = re.sub(r"(?<!\d)\d{17}[\dXx](?!\d)", "[身份证号已脱敏]", value)
+    protected: list[str] = []
+
+    def keep(match: re.Match) -> str:
+        protected.append(match.group(0))
+        return f"\x00{len(protected) - 1}\x00"
+
+    text = _RECORD_ID.sub(keep, value)
+    text = re.sub(r"(?<!\d)\d{17}[\dXx](?!\d)", "[身份证号已脱敏]", text)
     text = re.sub(r"(?<!\d)1[3-9]\d{9}(?!\d)", "[手机号已脱敏]", text)
     text = re.sub(
         r"(?<!\d)(?:\d[ -]?){15,19}(?!\d)", "[账号已脱敏]", text
     )
-    return text
+    return re.sub("\x00(\\d+)\x00", lambda match: protected[int(match.group(1))], text)
 
 
 def _content_from_response(payload: dict[str, Any]) -> str:
@@ -76,6 +91,7 @@ class LLMService:
         system_prompt: str,
         user_payload: dict[str, Any],
         max_output_tokens: int = 4000,
+        timeout: float = 90,
     ) -> LLMResult | None:
         if not self.is_configured:
             return None
@@ -125,7 +141,7 @@ class LLMService:
         if "api.deepseek.com" in self.settings.llm_base_url:
             request_payload["response_format"] = {"type": "json_object"}
             request_payload["thinking"] = {"type": "disabled"}
-        with httpx.Client(timeout=90, follow_redirects=True) as client:
+        with httpx.Client(timeout=timeout, follow_redirects=True) as client:
             response = client.post(url, headers=headers, json=request_payload)
             response.raise_for_status()
             raw = response.json()

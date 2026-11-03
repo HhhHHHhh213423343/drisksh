@@ -17,7 +17,12 @@ from enterprise_sentinel.company_profile.collector import (
     CaptchaRequiredError,
     CompanyProfileCollector,
 )
-from enterprise_sentinel.company_profile.contract import SOP_VERSION
+from enterprise_sentinel.company_profile.contract import (
+    OPTIONAL_MODULE_KEYS,
+    SOP_VERSION,
+    core_specs_for_mode,
+    specs_for_mode,
+)
 from enterprise_sentinel.company_profile.excel import build_company_profile_workbook
 from enterprise_sentinel.engine import BrowserConfig, LoginRequiredError
 from enterprise_sentinel.profile_manager import cleanup_prepared_profile, prepare_runtime_profile
@@ -109,6 +114,7 @@ class CompanyProfileAgent:
         run = job["run"]
         company = job["company"]
         run_id = str(run["id"])
+        mode = str(run.get("mode") or "full")
         statuses: dict[str, str] = {}
         prepared = None
         collector = None
@@ -131,6 +137,8 @@ class CompanyProfileAgent:
                 max_pages=self.browser_config.max_pages,
                 max_packets_per_page=self.browser_config.max_packets_per_page,
                 start_minimized=True,
+                direct_connection=self.browser_config.direct_connection,
+                attach_port=self.browser_config.attach_port,
             )
             browser_started = time.perf_counter()
             collector = CompanyProfileCollector(runtime_browser)
@@ -154,12 +162,13 @@ class CompanyProfileAgent:
                 company["name"],
                 company_code=str((company.get("qyyjt_profile") or {}).get("company_code") or ""),
                 heartbeat=heartbeat,
+                specs=specs_for_mode(mode),
             )
             collection_ms = round((time.perf_counter() - collection_started) * 1000)
             incomplete = {
                 key: status
                 for key, status in result["module_statuses"].items()
-                if status not in {"PASS", "EMPTY_VALID"}
+                if key not in OPTIONAL_MODULE_KEYS and status not in {"PASS", "EMPTY_VALID"}
             }
             if incomplete:
                 raise RuntimeError(
@@ -170,6 +179,7 @@ class CompanyProfileAgent:
                 company["name"],
                 result["normalized_data"],
                 result["captured_at"],
+                core_specs_for_mode(mode),
             )
             excel_ms = round((time.perf_counter() - excel_started) * 1000)
             agent_stages = {
@@ -275,6 +285,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--use-live-profile", action="store_true")
     parser.add_argument("--clone-root-dir", default=os.getenv("DRISK_PROFILE_CLONE_ROOT", ""))
     parser.add_argument("--once", action="store_true")
+    parser.add_argument("--direct-connection", action="store_true", help="专用浏览器不走系统代理")
+    parser.add_argument("--attach-port", type=int, default=0, help="附着到已打开专用浏览器的调试端口")
     return parser.parse_args()
 
 
@@ -289,6 +301,8 @@ def main() -> None:
             profile_directory=args.profile_directory,
             browser_path=args.browser_path or None,
             start_minimized=True,
+            direct_connection=args.direct_connection,
+            attach_port=args.attach_port,
         ),
         worker_id=args.worker_id,
         poll_interval=args.poll_interval,

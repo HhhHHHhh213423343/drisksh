@@ -145,6 +145,7 @@ def _append_event(
     severity: str = "general",
     sentiment: str = "neutral",
     existing_hashes: set[str],
+    published_at: str = "",
 ) -> bool:
     title = _text(title)[:255] or f"{module_key}更新"
     content = _text(content) or title
@@ -170,11 +171,62 @@ def _append_event(
                 "section": section_title,
                 "row_index": row_index,
                 "dedupe_hash": event_hash,
+                **({"published_at": published_at} if published_at else {}),
             },
         )
     )
     existing_hashes.add(event_hash)
     return True
+
+
+LITIGATION_MODULES = (
+    # (模块, 标题前缀, 事件日期列, 发布日期列, 重要性)
+    ("judgments", "裁判文书", ("裁判日期", "判决日期", "日期"), ("发布日期", "公开日期"), "important"),
+    ("court_hearings", "开庭公告", ("开庭日期", "开庭时间"), ("发布日期", "公告日期"), "general"),
+    ("case_filings", "立案信息", ("立案日期", "立案时间"), ("发布日期", "公告日期"), "general"),
+    ("enforcement", "被执行人", ("立案日期", "立案时间"), ("发布日期", "公布日期"), "important"),
+)
+
+
+def _ingest_litigation(
+    db: Session,
+    snapshot: CompanyProfileSnapshot,
+    modules: dict[str, Any],
+    captured_at: datetime,
+    existing_hashes: set[str],
+) -> int:
+    count = 0
+    for module_key, label, event_columns, publish_columns, severity in LITIGATION_MODULES:
+        module = modules.get(module_key) or {}
+        if module.get("status") not in {"PASS", "EMPTY_VALID", None}:
+            continue
+        for section_title, row_index, row in _records(module):
+            cause = _first(row, "案由", "案件名称", "执行标的") or label
+            role = _first(row, "案件身份", "身份", "诉讼地位")
+            event_on = _parse_date(_first(row, *event_columns), captured_at)
+            published = _first(row, *publish_columns)
+            title = f"{label}：{cause}" + (f"（{role}）" if role else "")
+            appended = _append_event(
+                db,
+                snapshot=snapshot,
+                module_key=module_key,
+                module=module,
+                section_title=section_title,
+                row_index=row_index,
+                title=title,
+                content=_content(row),
+                occurred_at=event_on,
+                category="legal",
+                severity=severity,
+                sentiment="negative",
+                existing_hashes=existing_hashes,
+                # 开庭日、立案日不替代发布日期；页面没有发布日期时以首次采集日期纳入。
+                published_at=(
+                    _parse_date(published, captured_at) if published else captured_at
+                ).date().isoformat(),
+            )
+            count += int(appended)
+    return count
 
 
 def _upsert_related_entity(
@@ -294,6 +346,8 @@ def ingest_company_profile_snapshot(
             )
         )
 
+    event_count += _ingest_litigation(db, snapshot, modules, captured_at, existing_hashes)
+
     changes = modules.get("business_changes") or {}
     for section_title, row_index, row in _records(changes):
         project = _first(row, "变更项目", "变更事项") or "工商变更"
@@ -339,6 +393,9 @@ def ingest_company_profile_snapshot(
             ("executives", "高管变更", ("姓名", "高管姓名")),
             ("shareholders", "股东变更", ("股东名称", "股东", "企业名称")),
         ):
+            # 轻量采集不含高管、股东模块，缺少任一侧时不做比较，避免误报“退出”。
+            if module_key not in modules or module_key not in previous_modules:
+                continue
             current_rows = _identity_rows(modules.get(module_key), names)
             previous_rows = _identity_rows(previous_modules.get(module_key), names)
             added = sorted(set(current_rows) - set(previous_rows))

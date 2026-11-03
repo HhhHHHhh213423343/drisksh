@@ -59,6 +59,34 @@ powershell -ExecutionPolicy Bypass -File .\run-worker.ps1 -Once
 5. Excel 文件只包含固定顺序的 8 个 Sheet；
 6. 24 小时内再次搜索直接复用完整快照，点击“重新采集”才强制新建任务。
 
+## 3.1 司法模块校准（1.1.0 起）
+
+1.1.0 起每次采集在八个核心模块之后追加四个司法模块：裁判文书、开庭公告、立案信息、被执行人（`enterprise_sentinel/company_profile/contract.py` 的 `LITIGATION_SPECS`）。司法模块为可选模块：失败时状态记为 `FAILED`、原因写入 `performance.module_errors`，**不影响**八个核心模块的快照发布，月报法律板块此时只依据动态监测和监管处罚。
+
+司法模块的页面锚点是按企业预警通信用页结构预设的，首次部署必须在已登录的 Windows 上校准：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\calibrate-litigation.ps1
+```
+
+没有 Windows 时可在 Mac 上校准（同样需要中国大陆网络和企业预警通账号）：
+
+```bash
+sh scripts/company-profile-mac-login.sh        # 在弹出的专用浏览器中登录后关闭窗口
+sh scripts/company-profile-mac-calibrate.sh
+```
+
+Mac 脚本启动的专用浏览器默认不走系统代理（`--no-proxy-server`），本机开着 VPN 时企业预警通仍以直连访问，其他浏览器继续使用 VPN；如需专用浏览器也走系统代理，加 `DRISK_USE_SYSTEM_PROXY=1`。默认优先使用 Edge；要用 Google Chrome，三个 Mac 脚本前都加 `DRISK_BROWSER=chrome`（Chrome 的登录数据单独保存在 `.runtime/qyyjt-chrome`，与 Edge 不通用）。
+
+脚本只读页面，不上传平台。Mac 结果写入 `.runtime/logs/litigation-calibration-*.json`。结果写入 `.runtime\logs\litigation-calibration-*.json`：
+
+- `module_statuses` 四项均为 `PASS` 或 `EMPTY_VALID`：校准通过，无需修改；
+- 某项为 `FAILED`：将该 JSON 发给开发，根据 `credit_page_headings` 中的实际标题和 `id` 修正对应模块的页面、锚点和表头后重新校准。
+
+## 3.2 合作方、关联方轻量采集
+
+被投企业的“开始分析”在 `COMPANY_PROFILE_WORKER_ENABLED=true` 时，会为已确认的合作方、关联方各排队一个 `monitor` 模式任务：只采监管处罚、动态监测和四个司法模块，Excel 只含监管处罚、动态监测两张表。任务仍按 24 小时缓存复用，Worker 依次领取；采集结果在**下一次**分析时进入规则评估和月报的按主体段落。携程金融 10 个关联主体单轮约需 10 个任务，请在月报生成前预留采集时间。
+
 ## 4. 设为 Windows 登录后自动运行
 
 单次验收通过后执行：

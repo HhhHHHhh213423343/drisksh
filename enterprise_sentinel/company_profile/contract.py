@@ -171,4 +171,71 @@ MODULE_SPECS = (
     ),
 )
 
-MODULE_BY_KEY = {item.key: item for item in MODULE_SPECS}
+# 司法模块的页面锚点需在已登录的 Windows Edge 上校准；采集失败只标记 FAILED，
+# 不影响八个核心模块的快照发布。
+LITIGATION_SPECS = (
+    ModuleSpec(
+        "judgments",
+        "裁判文书",
+        "creditData",
+        "裁判文书",
+        ("案由", "案号"),
+        ("序号", "发布日期", "案件名称", "案由", "案号", "案件身份", "法院"),
+        container_selectors=('[id="裁判文书"]', '[data-anchor="裁判文书"]', '[name="裁判文书"]'),
+        heading_aliases=("裁判文书", "法律诉讼", "司法文书"),
+        scan_scope="page",
+    ),
+    ModuleSpec(
+        "court_hearings",
+        "开庭公告",
+        "creditData",
+        "开庭公告",
+        ("开庭日期", "案由"),
+        ("序号", "开庭日期", "案由", "案号", "原告/上诉人", "被告/被上诉人", "法院"),
+        container_selectors=('[id="开庭公告"]', '[data-anchor="开庭公告"]', '[name="开庭公告"]'),
+        heading_aliases=("开庭公告", "开庭信息"),
+        scan_scope="page",
+    ),
+    ModuleSpec(
+        "case_filings",
+        "立案信息",
+        "creditData",
+        "立案信息",
+        ("立案日期", "案由"),
+        ("序号", "立案日期", "案由", "案号", "原告", "被告", "法院"),
+        container_selectors=('[id="立案信息"]', '[data-anchor="立案信息"]', '[name="立案信息"]'),
+        heading_aliases=("立案信息", "立案公告"),
+        scan_scope="page",
+    ),
+    ModuleSpec(
+        "enforcement",
+        "被执行人",
+        "creditData",
+        "被执行人",
+        ("立案日期", "执行标的"),
+        ("序号", "立案日期", "案号", "执行标的", "执行法院", "失信情况"),
+        container_selectors=('[id="被执行人"]', '[data-anchor="被执行人"]', '[name="被执行人"]'),
+        heading_aliases=("被执行人", "失信被执行人", "执行信息"),
+        scan_scope="page",
+    ),
+)
+
+OPTIONAL_MODULE_KEYS = frozenset(item.key for item in LITIGATION_SPECS)
+
+# full：被投企业本体，八个核心模块加司法模块；
+# monitor：已确认的合作方、关联方，只采法律和舆情所需模块。
+MODE_CORE_KEYS = {
+    "full": tuple(item.key for item in MODULE_SPECS),
+    "monitor": ("penalties", "dynamic_monitor"),
+}
+
+MODULE_BY_KEY = {item.key: item for item in (*MODULE_SPECS, *LITIGATION_SPECS)}
+
+
+def core_specs_for_mode(mode: str) -> tuple[ModuleSpec, ...]:
+    keys = MODE_CORE_KEYS.get(mode, MODE_CORE_KEYS["full"])
+    return tuple(MODULE_BY_KEY[key] for key in keys)
+
+
+def specs_for_mode(mode: str) -> tuple[ModuleSpec, ...]:
+    return (*core_specs_for_mode(mode), *LITIGATION_SPECS)

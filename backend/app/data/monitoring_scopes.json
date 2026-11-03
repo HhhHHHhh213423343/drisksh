@@ -1,0 +1,86 @@
+{
+  "version": "2026-09",
+  "source_name": "上海携程股权投资风险监测指标（2026年9月）监测实体清单；2026-11-03 增补中国银联股份有限公司为穿透股东方",
+  "companies": [
+    {
+      "company_name": "上海携程金融信息服务有限公司",
+      "self_sentiment_group": "携程系",
+      "sentiment_groups": [
+        {
+          "label": "携程系",
+          "focus": "重点监测客户数据、平台运营及金融合作链路中的负面事项，以及相关事项向上海携程金融信息服务有限公司的传导。"
+        },
+        {
+          "label": "银联系",
+          "focus": "重点监测合作主体、关联方未经授权使用“银联/UnionPay”名称及标识、虚假宣称银联授权或合作关系，以及借银联品牌开展误导宣传等情况。"
+        },
+        {
+          "label": "其他主体",
+          "focus": "重点监测未经授权使用“银联/UnionPay”名称及标识、虚假宣称银联授权或合作关系，以及借银联品牌开展误导宣传等情况。"
+        }
+      ],
+      "entities": [
+        {
+          "name": "携程科技（上海）有限公司",
+          "relation_type": "partner",
+          "relation_note": "携程金融平台开发、运营主体",
+          "sentiment_group": "携程系"
+        },
+        {
+          "name": "携程金融科技（上海）有限公司",
+          "relation_type": "partner",
+          "relation_note": "携程金融平台关联方",
+          "sentiment_group": "携程系"
+        },
+        {
+          "name": "携程旅游网络技术（上海）有限公司",
+          "relation_type": "shareholder",
+          "relation_note": "上海携程金融信息服务有限公司股东方",
+          "sentiment_group": "携程系"
+        },
+        {
+          "name": "银联国际有限公司",
+          "relation_type": "shareholder",
+          "relation_note": "上海携程金融信息服务有限公司股东方",
+          "sentiment_group": "银联系"
+        },
+        {
+          "name": "上海领偕商务咨询有限公司",
+          "relation_type": "shareholder",
+          "relation_note": "上海携程金融信息服务有限公司股东方",
+          "sentiment_group": "其他主体"
+        },
+        {
+          "name": "克拉斯（北京）投资有限公司",
+          "relation_type": "shareholder",
+          "relation_note": "上海携程金融信息服务有限公司股东方",
+          "sentiment_group": "其他主体"
+        },
+        {
+          "name": "北京中汇优通投资有限公司",
+          "relation_type": "shareholder",
+          "relation_note": "上海携程金融信息服务有限公司股东方",
+          "sentiment_group": "其他主体"
+        },
+        {
+          "name": "上海程兑商务咨询有限责任公司",
+          "relation_type": "subsidiary",
+          "relation_note": "上海携程金融信息服务有限公司全资子公司",
+          "sentiment_group": "携程系"
+        },
+        {
+          "name": "携程集团有限公司",
+          "relation_type": "penetrating_shareholder",
+          "relation_note": "上海携程金融信息服务有限公司穿透股东方",
+          "sentiment_group": "携程系"
+        },
+        {
+          "name": "中国银联股份有限公司",
+          "relation_type": "penetrating_shareholder",
+          "relation_note": "上海携程金融信息服务有限公司穿透股东方",
+          "sentiment_group": "银联系"
+        }
+      ]
+    }
+  ]
+}

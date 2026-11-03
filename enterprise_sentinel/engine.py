@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import socket
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -39,6 +40,10 @@ class BrowserConfig:
     max_pages: int = 3
     max_packets_per_page: int = 8
     start_minimized: bool = False
+    # 本机开着境外代理时，专用浏览器直连企业预警通，其他浏览器不受影响。
+    direct_connection: bool = False
+    # 大于 0 时不启动浏览器，附着到该本机调试端口上已打开的专用浏览器。
+    attach_port: int = 0
 
 
 class CrawlerEngine:
@@ -52,6 +57,9 @@ class CrawlerEngine:
         self.browser = self._build_browser()
 
     def close(self) -> None:
+        # 附着到外部已打开的浏览器时，由启动它的脚本负责关闭。
+        if self.browser_config.attach_port:
+            return
         try:
             self.browser.quit()
         except Exception:
@@ -81,20 +89,31 @@ class CrawlerEngine:
             raise BrowserStartupError(
                 "当前环境未安装 DrissionPage；请在采集节点安装根目录 requirements.txt。"
             )
+        if self.browser_config.attach_port:
+            # macOS 上由部分 Python 发行版启动的 Chrome 不开放调试端口，改由脚本启动后附着。
+            try:
+                return Chromium(f"127.0.0.1:{self.browser_config.attach_port}")
+            except Exception as exc:
+                raise BrowserStartupError(
+                    f"无法连接 127.0.0.1:{self.browser_config.attach_port} 上的专用浏览器：{exc}"
+                ) from exc
         options = ChromiumOptions()
 
         # 通过 Chromium 系浏览器的原生用户目录复用登录态，避免脚本内处理验证码和二次登录。
         browser_path = self.browser_config.browser_path or self._detect_browser_path()
         if browser_path:
             options.set_browser_path(browser_path)
-        options.set_argument(f"--user-data-dir={self.browser_config.user_data_dir}")
+        options.set_user_data_path(self.browser_config.user_data_dir)
         options.set_argument(f"--profile-directory={self.browser_config.profile_directory}")
         options.set_argument("--disable-blink-features=AutomationControlled")
         options.set_argument("--no-default-browser-check")
         options.set_argument("--disable-features=TranslateUI")
+        if self.browser_config.direct_connection:
+            options.set_argument("--no-proxy-server")
         if self.browser_config.start_minimized:
             options.set_argument("--start-minimized")
-        options.auto_port()
+        # 不用 auto_port()：它会把用户目录换成临时空目录，导致登录态丢失。
+        options.set_local_port(self._free_port())
         options.set_load_mode("eager")
         options.ignore_certificate_errors()
         options.set_retry(times=3, interval=2)
@@ -104,6 +123,12 @@ class CrawlerEngine:
         except Exception as exc:
             message = self._format_startup_error(exc)
             raise BrowserStartupError(message) from exc
+
+    @staticmethod
+    def _free_port() -> int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+            probe.bind(("127.0.0.1", 0))
+            return probe.getsockname()[1]
 
     def _prepare_listener(self, page) -> None:
         page.set.load_mode.eager()

@@ -9,6 +9,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.db.session import SessionLocal
 from app.models import (
     AnalysisJob,
@@ -21,9 +22,11 @@ from app.models import (
 )
 from app.services.akshare_profile import refresh_company_akshare_profile
 from app.services.authoritative_ingestion import collect_authoritative_sources
+from app.services.company_profile import queue_related_entity_runs
 from app.services.document_ingestion import parse_document
 from app.services.generic_ingestion import DailyIngestionService
 from app.services.monthly_reports import generate_monthly_report
+from app.services.monitoring_scope import confirmed_entities, ensure_official_related_entities
 from app.services.macro_ingestion import MACRO_INDICATORS, refresh_macro_data
 from app.services.qichacha_profile import refresh_company_qichacha_profile
 from app.services.rule_engine import evaluate_rules
@@ -102,16 +105,7 @@ def _discover_related_entities(db: Session, company: Company) -> int:
 
 
 def _confirmed_related_companies(db: Session, company: Company) -> list[Company]:
-    entities = list(
-        db.execute(
-            select(RelatedEntity)
-            .where(RelatedEntity.company_id == company.id)
-            .where(RelatedEntity.status == "confirmed")
-            .where(RelatedEntity.relation_type != "key_person")
-            .order_by(RelatedEntity.created_at.asc())
-            .limit(10)
-        ).scalars()
-    )
+    entities = confirmed_entities(db, company)[:12]
     companies: list[Company] = []
     for entity in entities:
         related = db.execute(
@@ -257,8 +251,19 @@ def _run_analysis_job(db: Session, job: AnalysisJob) -> dict[str, Any]:
         db, run, stage="discover_related_entities", current=3, source_status=source_status
     )
     company = db.get(Company, run.company_id)
+    ensure_official_related_entities(db, company)
     related_count = _discover_related_entities(db, company)
     confirmed_related = _confirmed_related_companies(db, company)
+    if confirmed_related and get_settings().company_profile_worker_enabled:
+        # Windows 采集节点异步执行，结果在下一次分析时进入评估和月报。
+        try:
+            source_status["qyyjt_related_entities"] = queue_related_entity_runs(
+                db, company, confirmed_related
+            )
+        except Exception as exc:
+            db.rollback()
+            source_status["qyyjt_related_entities"] = {"status": "failed", "message": str(exc)[:500]}
+        company = db.get(Company, run.company_id)
     if confirmed_related:
         try:
             related_ingestion = asyncio.run(

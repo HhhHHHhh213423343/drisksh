@@ -34,11 +34,13 @@ type ProfileState = {
 const MODULE_ORDER = [
   "overview", "penalties", "dynamic_monitor", "business_changes",
   "executives", "shareholders", "investments", "subsidiaries",
+  "judgments", "court_hearings", "case_filings", "enforcement",
 ];
 const MODULE_LABELS: Record<string, string> = {
   overview: "企业速览", penalties: "监管处罚", dynamic_monitor: "动态监测",
   business_changes: "工商变更", executives: "高管信息", shareholders: "股东信息",
   investments: "对外投资企业", subsidiaries: "控股子公司",
+  judgments: "裁判文书", court_hearings: "开庭公告", case_filings: "立案信息", enforcement: "被执行人",
 };
 const RUNNING = new Set(["queued", "running"]);
 
@@ -122,7 +124,7 @@ export default function CompanyProfilePanel({ companyId, companyName, onStatus }
     {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>}
     <section className="rounded-3xl border border-[#dfe5da] bg-white p-6 md:p-8">
       <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
-        <div><div className="flex items-center gap-2 text-sm font-semibold text-[#5c8d29]"><Database size={17} />企业预警通企业全景</div><h2 className="mt-2 text-2xl font-semibold">{companyName}</h2><p className="mt-3 text-sm leading-6 text-[#6e766f]">八个模块完整通过后生成正式快照。最近 24 小时内重复查询直接复用。</p></div>
+        <div><div className="flex items-center gap-2 text-sm font-semibold text-[#5c8d29]"><Database size={17} />企业预警通企业全景</div><h2 className="mt-2 text-2xl font-semibold">{companyName}</h2><p className="mt-3 text-sm leading-6 text-[#6e766f]">八个核心模块完整通过后生成正式快照，司法模块随快照一并展示。最近 24 小时内重复查询直接复用。</p></div>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => void refresh()} disabled={refreshing || Boolean(currentRun && RUNNING.has(currentRun.status))} className="flex items-center gap-2 rounded-xl border border-[#b9d593] px-4 py-2.5 text-sm font-semibold text-[#467419] disabled:opacity-50">{refreshing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}重新采集</button>
           <a aria-disabled={!snapshot} href={snapshot ? `/api/v1/companies/${companyId}/company-profile/export` : undefined} className={`flex items-center gap-2 rounded-xl bg-[#78be20] px-4 py-2.5 text-sm font-semibold text-[#13220b] ${snapshot ? "active:scale-[.98]" : "pointer-events-none opacity-40"}`}><Download size={16} />导出 Excel</a>

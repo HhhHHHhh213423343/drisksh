@@ -1108,6 +1108,57 @@
         "中金同盛商业保理有限公司": true,
         "重庆中金同盛小额贷款有限公司": true
       }
+    },
+    {
+      "code": 80,
+      "category": "品牌舆情风险",
+      "monitoring_point": "被投企业或其控股股东、实际控制人、法定代表人、高级管理人员、重要关联方发生重大舆情事件，或其他可能对携程声誉及品牌造成较大负面影响的事件。",
+      "assessment_standard": "评估舆情事件的传播范围及对携程品牌的关联影响。若事件登上主流媒体且负面声量高，或涉及金融消费者权益、监管违规等敏感话题，可能对携程品牌产生连带负面影响，视为重大舆情风险。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "applicability": {
+        "company_name_keywords": [
+          "携程"
+        ]
+      },
+      "original_targets": {
+        "上海携程金融信息服务有限公司": true
+      }
+    },
+    {
+      "code": 81,
+      "category": "品牌舆情风险",
+      "monitoring_point": "存在将携程机构名称、专用简称、商标标志等用于不具有实际控制权、不纳入并表管理的机构，出借名号和挂名经营等情形。",
+      "assessment_standard": "评估品牌授权合规性。若存在未经授权使用携程品牌或超范围授权的情形，且涉及金融类业务，视为品牌授权失控；关注清理整改进度及责任界定。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "applicability": {
+        "company_name_keywords": [
+          "携程"
+        ]
+      },
+      "original_targets": {
+        "上海携程金融信息服务有限公司": true
+      }
+    },
+    {
+      "code": 82,
+      "category": "品牌舆情风险",
+      "monitoring_point": "被投企业未经授权使用携程品牌；或未按照规定的授权条件和授权范围使用携程品牌。",
+      "assessment_standard": "评估品牌使用的合规性。若存在未授权使用或超授权范围使用携程品牌的情形，视为品牌违规；关注授权协议执行及整改情况。",
+      "requirement_type": "强制",
+      "evaluation_type": "event",
+      "enabled": true,
+      "applicability": {
+        "company_name_keywords": [
+          "携程"
+        ]
+      },
+      "original_targets": {
+        "上海携程金融信息服务有限公司": true
+      }
     }
   ]
 }
