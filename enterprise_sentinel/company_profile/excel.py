@@ -10,7 +10,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-from enterprise_sentinel.company_profile.contract import MODULE_SPECS
+from enterprise_sentinel.company_profile.contract import MODULE_SPECS, ModuleSpec
 
 
 TITLE_FILL = PatternFill("solid", fgColor="FF009A5A")
@@ -91,12 +91,13 @@ def build_company_profile_workbook(
     company_name: str,
     normalized_data: dict[str, Any],
     captured_at: datetime,
+    specs: tuple[ModuleSpec, ...] = MODULE_SPECS,
 ) -> tuple[str, bytes]:
     workbook = Workbook()
     workbook.remove(workbook.active)
     local_time = captured_at.astimezone(ZoneInfo("Asia/Shanghai"))
 
-    for spec in MODULE_SPECS:
+    for spec in specs:
         module = dict((normalized_data.get("modules") or {}).get(spec.key) or {})
         sections = list(module.get("sections") or [])
         if not sections:
@@ -217,14 +218,16 @@ def build_company_profile_workbook(
     output = BytesIO()
     workbook.save(output)
     data = output.getvalue()
-    validate_company_profile_workbook(data)
+    validate_company_profile_workbook(data, specs)
     filename = f"{company_name}-企业全景信息-{local_time:%Y%m%d}.xlsx"
     return filename, data
 
 
-def validate_company_profile_workbook(data: bytes) -> None:
+def validate_company_profile_workbook(
+    data: bytes, specs: tuple[ModuleSpec, ...] = MODULE_SPECS
+) -> None:
     workbook = load_workbook(BytesIO(data), data_only=False)
-    expected = [item.title for item in MODULE_SPECS]
+    expected = [item.title for item in specs]
     if workbook.sheetnames != expected:
         raise ValueError(f"Excel Sheet 顺序错误：{workbook.sheetnames}")
     formula_errors = {

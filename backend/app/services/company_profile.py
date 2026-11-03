@@ -38,12 +38,27 @@ PROFILE_MODULE_KEYS = (
     "investments",
     "subsidiaries",
 )
+# 与 enterprise_sentinel.company_profile.contract 保持一致：司法模块为可选模块，
+# 失败时只记录状态，不阻止核心模块快照发布。
+LITIGATION_MODULE_KEYS = ("judgments", "court_hearings", "case_filings", "enforcement")
+MODE_CORE_MODULE_KEYS = {
+    "full": PROFILE_MODULE_KEYS,
+    "monitor": ("penalties", "dynamic_monitor"),
+}
 ACTIVE_STATUSES = {"queued", "running", "waiting_for_login", "waiting_for_captcha"}
 COMPLETE_MODULE_STATUSES = {"PASS", "EMPTY_VALID"}
 CACHE_TTL = timedelta(hours=24)
 LEASE_TTL = timedelta(minutes=3)
 RETENTION = timedelta(days=365)
 MAX_EXCEL_BYTES = 20 * 1024 * 1024
+
+
+def core_module_keys(mode: str) -> tuple[str, ...]:
+    return MODE_CORE_MODULE_KEYS.get(mode, PROFILE_MODULE_KEYS)
+
+
+def mode_module_count(mode: str) -> int:
+    return len(core_module_keys(mode)) + len(LITIGATION_MODULE_KEYS)
 
 
 def normalize_company_name(value: str) -> str:
@@ -210,6 +225,7 @@ def create_or_reuse_run(
     company: Company,
     *,
     force: bool = False,
+    mode: str = "full",
 ) -> dict[str, Any]:
     if not enable_supported_company(db, company):
         return {"enabled": False, "reused": False, "run": None, "snapshot": None}
@@ -249,10 +265,10 @@ def create_or_reuse_run(
     run = CompanyProfileRun(
         company_id=company.id,
         status="queued",
-        mode="full",
+        mode=mode,
         force=force,
         progress_current=0,
-        progress_total=len(PROFILE_MODULE_KEYS),
+        progress_total=mode_module_count(mode),
     )
     db.add(run)
     try:
@@ -378,15 +394,16 @@ def heartbeat_run(
 def complete_run(db: Session, run_id: UUID, payload: Any) -> dict[str, Any]:
     run = _owned_running_run(db, run_id, payload.worker_id)
     statuses = dict(payload.module_statuses or {})
-    missing = [key for key in PROFILE_MODULE_KEYS if key not in statuses]
+    required = core_module_keys(run.mode or "full")
+    missing = [key for key in required if key not in statuses]
     invalid = {
         key: statuses.get(key)
-        for key in PROFILE_MODULE_KEYS
+        for key in required
         if statuses.get(key) not in COMPLETE_MODULE_STATUSES
     }
     if missing or invalid:
         raise ValueError(
-            f"八模块尚未全部通过校验。缺失：{missing or '无'}；失败：{invalid or '无'}。"
+            f"{'八模块' if required == PROFILE_MODULE_KEYS else '核心模块'}尚未全部通过校验。缺失：{missing or '无'}；失败：{invalid or '无'}。"
         )
 
     try:
@@ -427,7 +444,7 @@ def complete_run(db: Session, run_id: UUID, payload: Any) -> dict[str, Any]:
     }
     db.add(snapshot)
     run.status = "completed"
-    run.progress_current = len(PROFILE_MODULE_KEYS)
+    run.progress_current = mode_module_count(run.mode or "full")
     run.current_module = ""
     run.module_statuses = statuses
     run.finished_at = utcnow()
@@ -473,3 +490,25 @@ def fail_run(db: Session, run_id: UUID, payload: Any) -> dict[str, Any]:
     db.commit()
     db.refresh(run)
     return serialize_run(run) or {}
+
+
+def queue_related_entity_runs(
+    db: Session, parent: Company, related: list[Company]
+) -> dict[str, Any]:
+    """为已确认的合作方、关联方排队轻量采集（监管处罚、动态监测和司法模块）。"""
+
+    if not enable_supported_company(db, parent):
+        return {"status": "not_enabled", "message": "被投企业未启用企业预警通采集。"}
+    queued, reused = [], []
+    for company in related:
+        profile = dict(company.company_profile or {})
+        config = dict(profile.get("qyyjt_profile") or {})
+        if config.get("enabled") is not True or config.get("mode") != "monitor":
+            config.update({"enabled": True, "mode": "monitor", "parent_company_id": str(parent.id)})
+            profile["qyyjt_profile"] = config
+            company.company_profile = profile
+            db.add(company)
+            db.commit()
+        result = create_or_reuse_run(db, company, mode="monitor")
+        (reused if result["reused"] else queued).append(company.name)
+    return {"status": "queued", "queued": queued, "reused": reused}

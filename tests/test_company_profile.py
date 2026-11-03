@@ -36,6 +36,7 @@ from app.services.company_profile import (
     create_or_reuse_run,
     heartbeat_run,
     profile_company_suggestion,
+    queue_related_entity_runs,
     resolve_profile_company_name,
 )
 from app.services.demo_scope import DemoScopeError, canonical_company_name
@@ -44,7 +45,14 @@ from enterprise_sentinel.company_profile.collector import (
     sections_from_snapshot,
 )
 from enterprise_sentinel.company_profile.agent import CompanyProfileAgent, WorkerApiError
-from enterprise_sentinel.company_profile.contract import MODULE_BY_KEY, MODULE_SPECS, SOP_VERSION
+from enterprise_sentinel.company_profile.contract import (
+    LITIGATION_SPECS,
+    MODULE_BY_KEY,
+    MODULE_SPECS,
+    SOP_VERSION,
+    core_specs_for_mode,
+    specs_for_mode,
+)
 from enterprise_sentinel.company_profile.excel import build_company_profile_workbook
 from enterprise_sentinel.engine import BrowserConfig, CrawlerEngine
 
@@ -741,3 +749,153 @@ def test_browser_login_message_names_edge() -> None:
     )
 
     assert engine._browser_label() == "Microsoft Edge"
+
+
+def test_related_entities_use_monitor_mode_and_accept_failed_litigation() -> None:
+    db = database()
+    parent = Company(name="上海携程金融信息服务有限公司", company_profile={})
+    platform = Company(name="携程科技（上海）有限公司", company_profile={})
+    db.add_all([parent, platform])
+    db.commit()
+
+    queued = queue_related_entity_runs(db, parent, [platform])
+    assert queued == {"status": "queued", "queued": [platform.name], "reused": []}
+    assert queue_related_entity_runs(db, parent, [platform])["reused"] == [platform.name]
+
+    job = claim_next_run(db, "windows-test")
+    assert job["company"]["name"] == platform.name
+    assert job["run"]["mode"] == "monitor" and job["run"]["progress_total"] == 6
+    assert job["company"]["qyyjt_profile"]["parent_company_id"] == str(parent.id)
+
+    captured_at = datetime(2026, 9, 22, tzinfo=timezone.utc)
+    specs = core_specs_for_mode("monitor")
+    normalized = sample_normalized(platform.name)
+    normalized["modules"] = {spec.key: normalized["modules"][spec.key] for spec in specs}
+    normalized["modules"]["dynamic_monitor"]["sections"][0]["rows"] = []
+    normalized["modules"]["court_hearings"] = {
+        "key": "court_hearings",
+        "status": "PASS",
+        "source_url": MODULE_BY_KEY["court_hearings"].url("test-code"),
+        "sections": [
+            {
+                "title": "开庭公告",
+                "columns": ["序号", "开庭日期", "案由", "案件身份", "法院"],
+                "rows": [["1", "2026-11-12", "隐私权纠纷", "被告", "上海市长宁区人民法院"]],
+            }
+        ],
+    }
+    filename, excel_bytes = build_company_profile_workbook(platform.name, normalized, captured_at, specs)
+    assert load_workbook(BytesIO(excel_bytes)).sheetnames == ["监管处罚", "动态监测"]
+    statuses = {
+        "penalties": "PASS",
+        "dynamic_monitor": "EMPTY_VALID",
+        "court_hearings": "PASS",
+        "judgments": "FAILED",
+        "case_filings": "EMPTY_VALID",
+        "enforcement": "EMPTY_VALID",
+    }
+    complete_run(
+        db,
+        job["run"]["id"],
+        CompanyProfileComplete(
+            worker_id="windows-test",
+            captured_at=captured_at,
+            sop_version=SOP_VERSION,
+            company_code="platform-code",
+            module_statuses=statuses,
+            normalized_data=normalized,
+            raw_data={"modules": {}},
+            excel_filename=filename,
+            excel_sha256=hashlib.sha256(excel_bytes).hexdigest(),
+            excel_base64=base64.b64encode(excel_bytes).decode("ascii"),
+        ),
+    )
+    events = db.query(RiskEvent).filter(RiskEvent.company_id == platform.id).all()
+    hearing = next(event for event in events if event.title.startswith("开庭公告"))
+    assert hearing.title == "开庭公告：隐私权纠纷（被告）"
+    assert hearing.category == "legal"
+    assert hearing.occurred_at.date().isoformat() == "2026-11-12"
+    # 开庭日不替代发布日期，页面无发布日期时以首次采集日期纳入。
+    assert hearing.extra_payload["published_at"] == "2026-09-22"
+    assert not any(event.category == "governance" for event in events)
+    db.refresh(platform)
+    assert platform.company_profile["qyyjt_profile"]["company_code"] == "platform-code"
+
+
+def test_monitor_run_still_requires_core_modules() -> None:
+    db = database()
+    parent = Company(name="上海携程金融信息服务有限公司", company_profile={})
+    related = Company(name="银联国际有限公司", company_profile={})
+    db.add_all([parent, related])
+    db.commit()
+    queue_related_entity_runs(db, parent, [related])
+    job = claim_next_run(db, "windows-test")
+    with pytest.raises(ValueError, match="核心模块尚未全部通过"):
+        complete_run(
+            db,
+            job["run"]["id"],
+            CompanyProfileComplete(
+                worker_id="windows-test",
+                captured_at=datetime.now(timezone.utc),
+                sop_version=SOP_VERSION,
+                company_code="code",
+                module_statuses={"penalties": "PASS", "dynamic_monitor": "PARTIAL"},
+                normalized_data={},
+                raw_data={},
+                excel_filename="x.xlsx",
+                excel_sha256="0" * 64,
+                excel_base64="eA==",
+            ),
+        )
+
+
+def test_related_runs_skip_when_parent_not_enabled() -> None:
+    db = database()
+    parent = Company(name="测试被投企业有限公司", company_profile={})
+    db.add(parent)
+    db.commit()
+    assert queue_related_entity_runs(db, parent, [])["status"] == "not_enabled"
+
+
+def test_collector_continues_when_litigation_module_fails(monkeypatch) -> None:
+    from enterprise_sentinel.company_profile.collector import CompanyProfileCollector
+
+    class FakePage:
+        def close(self) -> None:
+            pass
+
+    class FakeBrowser:
+        def new_tab(self) -> FakePage:
+            return FakePage()
+
+    collector = object.__new__(CompanyProfileCollector)
+    collector.engine = type("FakeEngine", (), {"browser": FakeBrowser()})()
+    collector.retry_times = 2
+
+    def fake_collect_module(page, spec, company_name, company_code, **_):
+        if spec.key == "judgments":
+            raise RuntimeError("未找到裁判文书锚点")
+        timing = {"total_ms": 1}
+        module = {"key": spec.key, "status": "EMPTY_VALID", "sections": [], "timing": timing}
+        return module, {"pages": [], "timing": timing}
+
+    monkeypatch.setattr(collector, "_collect_module", fake_collect_module)
+    result = collector.collect("携程科技（上海）有限公司", company_code="code", specs=specs_for_mode("monitor"))
+    assert result["module_statuses"]["judgments"] == "FAILED"
+    assert result["module_statuses"]["court_hearings"] == "EMPTY_VALID"
+    assert "裁判文书" in result["raw_data"]["performance"]["module_errors"]["judgments"]
+
+    def failing_core(page, spec, company_name, company_code, **_):
+        raise RuntimeError("动态监测页面异常")
+
+    monkeypatch.setattr(collector, "_collect_module", failing_core)
+    with pytest.raises(RuntimeError, match="动态监测|监管处罚"):
+        collector.collect("携程科技（上海）有限公司", company_code="code", specs=specs_for_mode("monitor"))
+
+
+def test_litigation_specs_are_optional_and_keys_match_backend() -> None:
+    from app.services.company_profile import LITIGATION_MODULE_KEYS, MODE_CORE_MODULE_KEYS
+
+    assert tuple(spec.key for spec in LITIGATION_SPECS) == LITIGATION_MODULE_KEYS
+    assert MODE_CORE_MODULE_KEYS["monitor"] == tuple(spec.key for spec in core_specs_for_mode("monitor"))
+    assert [spec.key for spec in specs_for_mode("full")][:8] == list(PROFILE_MODULE_KEYS)

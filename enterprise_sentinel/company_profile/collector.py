@@ -7,7 +7,11 @@ from datetime import datetime, timezone
 from typing import Any, Callable
 from urllib.parse import parse_qs, urlparse
 
-from enterprise_sentinel.company_profile.contract import MODULE_SPECS, ModuleSpec
+from enterprise_sentinel.company_profile.contract import (
+    MODULE_SPECS,
+    OPTIONAL_MODULE_KEYS,
+    ModuleSpec,
+)
 from enterprise_sentinel.engine import BrowserConfig, CrawlerEngine, LoginRequiredError
 
 
@@ -508,6 +512,7 @@ class CompanyProfileCollector:
         *,
         company_code: str = "",
         heartbeat: Heartbeat | None = None,
+        specs: tuple[ModuleSpec, ...] = MODULE_SPECS,
     ) -> dict[str, Any]:
         run_started = time.perf_counter()
         code_started = time.perf_counter()
@@ -520,9 +525,10 @@ class CompanyProfileCollector:
         pages: dict[str, Any] = {}
         loaded_families: set[str] = set()
         module_timings: dict[str, dict[str, Any]] = {}
+        module_errors: dict[str, str] = {}
 
         try:
-            for index, spec in enumerate(MODULE_SPECS):
+            for index, spec in enumerate(specs):
                 if heartbeat:
                     heartbeat(index, spec.key, statuses)
                 page = pages.get(spec.page)
@@ -572,9 +578,11 @@ class CompanyProfileCollector:
                         )
                 else:
                     statuses[spec.key] = "FAILED"
-                    raise ModuleExtractionError(
-                        f"{spec.title} 连续 {self.retry_times} 次采集失败：{last_error}"
-                    )
+                    message = f"{spec.title} 连续 {self.retry_times} 次采集失败：{last_error}"
+                    if spec.key not in OPTIONAL_MODULE_KEYS:
+                        raise ModuleExtractionError(message)
+                    # 司法模块失败只记录原因，核心模块照常发布。
+                    module_errors[spec.key] = message[:500]
                 if heartbeat:
                     heartbeat(index + 1, spec.key, statuses)
         finally:
@@ -590,6 +598,7 @@ class CompanyProfileCollector:
             "company_code_lookup_ms": code_lookup_ms,
             "page_family_count": len(pages),
             "module_timings": module_timings,
+            "module_errors": module_errors,
         }
 
         return {
