@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models import CompanyRuleAssignment, MonitoringRule, RuleSet
+from app.models import Company, CompanyRuleAssignment, MonitoringRule, RuleSet
 
 
 RULE_DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "rules_2026.json"
@@ -124,7 +124,7 @@ def ensure_default_rule_set(db: Session) -> RuleSet:
             "metrics": _metric_requirements(condition),
             "original_targets": item.get("original_targets", {}),
         }
-        rule.applicability = {"company_scope": "all"}
+        rule.applicability = item.get("applicability") or {"company_scope": "all"}
         db.add(rule)
     try:
         db.commit()
@@ -140,8 +140,18 @@ def ensure_default_rule_set(db: Session) -> RuleSet:
     return rule_set
 
 
+def rule_applies_to_company(rule: MonitoringRule, company: Company | None) -> bool:
+    # 品牌类规则只默认启用于名称含对应品牌的被投企业，其余公司可在规则配置中手动开启。
+    keywords = (rule.applicability or {}).get("company_name_keywords") or []
+    if not keywords:
+        return True
+    name = company.name if company else ""
+    return any(keyword in name for keyword in keywords)
+
+
 def ensure_company_rule_assignments(db: Session, company_id) -> RuleSet:
     rule_set = ensure_default_rule_set(db)
+    company = db.get(Company, company_id)
     rules = list(
         db.execute(
             select(MonitoringRule)
@@ -162,7 +172,7 @@ def ensure_company_rule_assignments(db: Session, company_id) -> RuleSet:
                 CompanyRuleAssignment(
                     company_id=company_id,
                     rule_id=rule.id,
-                    enabled=True,
+                    enabled=rule_applies_to_company(rule, company),
                     override={},
                 )
             )

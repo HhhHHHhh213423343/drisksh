@@ -219,7 +219,8 @@ def _number(value: Any, metric_code: str = "") -> tuple[float | None, str, str]:
 
 def _period(value: Any) -> str:
     text = str(value or "").strip()
-    match = re.search(r"(20\d{2})[年./-]?(0?[1-9]|1[0-2])?", text)
+    # 两位月份放在前面，避免把“2026-10”读成 1 月。
+    match = re.search(r"(20\d{2})[年./-]?(1[0-2]|0?[1-9])?(?!\d)", text)
     if not match:
         return text[:32] if len(text) <= 32 else ""
     year, month = match.groups()

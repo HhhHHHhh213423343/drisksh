@@ -21,6 +21,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "backend"))
 
 from app.db.session import SessionLocal  # noqa: E402
 from app.models import Company, MacroIndustryEvent, RiskEvent  # noqa: E402
+from app.services.monitoring_scope import ensure_official_related_entities  # noqa: E402
 
 COMPANY_NAME = "上海携程金融信息服务有限公司"
 
@@ -43,6 +44,7 @@ PROFILE_PATCH = {
 WRONG_AKSHARE_MATCH = {"000402", "金 融 街", "金融街"}
 
 # ------------------------------------------------------------------ 公司级事件
+# 原有一条天眼查“开庭公告2条”记录已于 2026-11-03 删除：企业预警通核查本部无开庭公告等司法记录。
 RISK_EVENTS = [
     {
         "category": "监管处罚",
@@ -135,20 +137,6 @@ RISK_EVENTS = [
         "source_name": "黑猫投诉 / 财中社",
         "source_url": "https://finance.eastmoney.com/a/202504223384453224.html",
         "occurred_at": "2026-04-30",
-    },
-    {
-        "category": "法律风险",
-        "severity": "normal",
-        "sentiment": "neutral",
-        "title": "司法信息显示存在开庭公告2条，需持续跟踪案件进展",
-        "content": (
-            "第三方企业信息平台显示，上海携程金融信息服务有限公司存在开庭公告2条，"
-            "此外关联风险条目数量较多。具体案由、标的金额与进展需通过企业预警通或司法公开渠道进一步核验，"
-            "暂不据此认定重大法律风险，但要纳入持续跟踪清单。"
-        ),
-        "source_name": "天眼查",
-        "source_url": "https://www.tianyancha.com/company/2350710871",
-        "occurred_at": "2026-09-01",
     },
     {
         "category": "监管处罚",
@@ -432,6 +420,10 @@ def seed() -> None:
         print(f"[新增] 行业事件 {added_industry} 条（已有记录自动跳过）")
 
         db.commit()
+
+        # 4. 客户确认的监测实体清单（本体之外的 2 个合作方、7 个关联方）
+        changed = ensure_official_related_entities(db, company)
+        print(f"[更新] 监测实体清单 {changed} 个主体已确认（已是最新的自动跳过）")
 
         total_events = (
             db.query(RiskEvent).filter(RiskEvent.company_id == company.id).count()

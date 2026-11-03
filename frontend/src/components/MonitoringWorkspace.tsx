@@ -31,6 +31,10 @@ type Fact = {
   source_locator: string; confidence: number; status: "pending" | "confirmed" | "rejected";
 };
 type FactEdit = Partial<Pick<Fact, "metric_code" | "label" | "value_numeric" | "value_text" | "unit" | "currency" | "period">>;
+const RELATION_LABELS: Record<string, string> = {
+  shareholder: "股东方", penetrating_shareholder: "穿透股东方", subsidiary: "子公司", investment: "对外投资",
+  partner: "合作方", customer: "重要客户", guarantor: "担保机构", key_person: "关键人员", other: "其他关联方",
+};
 type RelatedEntity = {
   id: string; name: string; relation_type: string; status: "candidate" | "confirmed" | "rejected";
   source: string;
@@ -343,7 +347,7 @@ export default function MonitoringWorkspace({ companyId, companyName, initialRun
         <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4"><span><b className="block">监测主体范围</b><span className="mt-1 block text-xs text-[#7a827a]">子公司、股东、重要客户和合作机构</span></span><span className="text-xs text-[#6b8f43]">{entities.filter((item) => item.status === "confirmed").length}家已确认</span></summary>
         <div className="border-t border-[#edf0ea] p-5">
           <div className="flex gap-2"><input value={entityName} onChange={(event) => setEntityName(event.target.value)} placeholder="关联主体名称" className="min-w-0 flex-1 rounded-xl border border-[#d8dfd3] px-3 py-2 text-sm" /><select value={relationType} onChange={(event) => setRelationType(event.target.value)} className="rounded-xl border border-[#d8dfd3] px-2 py-2 text-xs"><option value="subsidiary">子公司</option><option value="shareholder">股东</option><option value="customer">重要客户</option><option value="guarantor">担保机构</option><option value="partner">合作方</option><option value="other">其他</option></select><button onClick={() => void addEntity()} disabled={!entityName.trim() || busy === "entity-add"} className="rounded-xl border border-[#b9d593] px-3 py-2 text-sm font-semibold text-[#467419] disabled:opacity-50">添加</button></div>
-          <div className="mt-4 space-y-2">{entities.slice(0, 12).map((entity) => <div key={entity.id} className="flex items-center justify-between gap-3 rounded-xl border border-[#e4e9df] px-3 py-3"><span className="min-w-0"><span className="block truncate text-sm font-medium">{entity.name}</span><span className="mt-1 block text-xs text-[#808880]">{entity.relation_type} · {entity.status === "confirmed" ? "已纳入" : entity.status === "candidate" ? "待确认" : "已排除"}</span></span>{entity.status === "candidate" && <span className="flex gap-1"><button title="确认纳入" onClick={() => void decideEntity(entity, "confirmed")} className="rounded-lg bg-emerald-50 p-2 text-emerald-700"><Check size={15} /></button><button title="排除" onClick={() => void decideEntity(entity, "rejected")} className="rounded-lg bg-red-50 p-2 text-red-700"><X size={15} /></button></span>}</div>)}</div>
+          <div className="mt-4 space-y-2">{entities.slice(0, 12).map((entity) => <div key={entity.id} className="flex items-center justify-between gap-3 rounded-xl border border-[#e4e9df] px-3 py-3"><span className="min-w-0"><span className="block truncate text-sm font-medium">{entity.name}</span><span className="mt-1 block text-xs text-[#808880]">{RELATION_LABELS[entity.relation_type] || entity.relation_type} · {entity.status === "confirmed" ? "已纳入" : entity.status === "candidate" ? "待确认" : "已排除"}</span></span>{entity.status === "candidate" && <span className="flex gap-1"><button title="确认纳入" onClick={() => void decideEntity(entity, "confirmed")} className="rounded-lg bg-emerald-50 p-2 text-emerald-700"><Check size={15} /></button><button title="排除" onClick={() => void decideEntity(entity, "rejected")} className="rounded-lg bg-red-50 p-2 text-red-700"><X size={15} /></button></span>}</div>)}</div>
           {!entities.length && <p className="mt-4 rounded-xl bg-[#f7f9f4] px-4 py-5 text-center text-sm text-[#7a827a]">尚未添加关联监测主体</p>}
         </div>
       </details>

@@ -77,8 +77,17 @@ class MonthlyReportCreate(BaseModel):
     title: str = Field(default="", max_length=255)
 
 
+class SectionRatingUpdate(BaseModel):
+    level: Literal["低风险", "较低风险", "中风险", "较高风险", "高风险"]
+    data_pending: bool = False
+    summary: str = Field(default="", max_length=200)
+    basis: str = Field(..., min_length=1, max_length=4000)
+
+
 class MonthlyReportUpdate(BaseModel):
     title: Optional[str] = Field(default=None, max_length=255)
     summary: Optional[str] = None
     sections: Optional[dict[str, str]] = None
+    ratings: Optional[dict[str, SectionRatingUpdate]] = None
+    rating_boundary: Optional[str] = Field(default=None, max_length=4000)
     status: Optional[Literal["draft", "in_review"]] = None

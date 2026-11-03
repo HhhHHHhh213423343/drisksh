@@ -65,12 +65,16 @@ from app.services.document_ingestion import (
 )
 from app.services.monitoring_jobs import enqueue_job, process_job_by_id
 from app.services.monthly_reports import (
+    RATING_LEVELS,
+    RISK_SECTIONS,
     SECTION_LABELS,
     SECTION_ORDER,
     append_report_revision,
     export_monthly_report_xlsx,
+    report_ratings,
 )
 from app.services.rule_seed import ensure_company_rule_assignments, ensure_default_rule_set
+from app.utils.pydantic import model_to_dict
 
 
 router = APIRouter(tags=["monitoring"])
@@ -185,6 +189,10 @@ def _report_payload(report: MonthlyReport) -> dict[str, Any]:
         "evidence_snapshot": report.evidence_snapshot or {},
         "section_order": SECTION_ORDER,
         "section_labels": SECTION_LABELS,
+        "risk_sections": RISK_SECTIONS,
+        "rating_levels": list(RATING_LEVELS),
+        "ratings": report_ratings(report),
+        "rating_boundary": str((report.evidence_snapshot or {}).get("rating_boundary") or ""),
         "rule_set_version": report.rule_set_version,
         "model_name": report.model_name,
         "token_usage": report.token_usage or {},
@@ -909,6 +917,23 @@ def update_monthly_report(
         if unknown:
             raise HTTPException(status_code=400, detail=f"未知报告板块：{sorted(unknown)}")
         report.sections = {**(report.sections or {}), **payload.sections}
+    if payload.ratings is not None or payload.rating_boundary is not None:
+        snapshot = dict(report.evidence_snapshot or {})
+        if payload.ratings is not None:
+            unknown = set(payload.ratings) - set(RISK_SECTIONS)
+            if unknown:
+                raise HTTPException(status_code=400, detail=f"未知评级板块：{sorted(unknown)}")
+            ratings = dict(snapshot.get("ratings") or {})
+            for key, item in payload.ratings.items():
+                updated = model_to_dict(item)
+                previous = ratings.get(key) or {}
+                unchanged = all(previous.get(field) == updated[field] for field in updated)
+                updated["source"] = previous.get("source", "manual") if unchanged else "manual"
+                ratings[key] = updated
+            snapshot["ratings"] = ratings
+        if payload.rating_boundary is not None:
+            snapshot["rating_boundary"] = payload.rating_boundary
+        report.evidence_snapshot = snapshot
     if payload.status is not None:
         report.status = payload.status
     actor = actor_from_request(request)
@@ -940,6 +965,14 @@ def approve_monthly_report(
     missing = [key for key in SECTION_ORDER if not str((report.sections or {}).get(key) or "").strip()]
     if missing:
         raise HTTPException(status_code=400, detail=f"以下板块尚未填写：{missing}")
+    ratings = report_ratings(report)
+    unrated = [
+        SECTION_LABELS[key]
+        for key in RISK_SECTIONS
+        if (ratings.get(key) or {}).get("level") not in RATING_LEVELS
+    ]
+    if unrated:
+        raise HTTPException(status_code=400, detail=f"以下板块尚未评级：{unrated}")
     actor = actor_from_request(request)
     before = _report_payload(report)
     report.status = "approved"
